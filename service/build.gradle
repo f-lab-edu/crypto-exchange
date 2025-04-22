@@ -1,0 +1,13 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot'
+    id 'io.spring.dependency-management'
+}
+
+dependencies {
+    implementation project(':domain')
+    implementation project(':infra-database')
+    implementation project(':external-api')
+
+    implementation 'org.springframework.boot:spring-boot-starter'
+}
