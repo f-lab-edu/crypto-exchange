@@ -7,8 +7,6 @@ plugins {
 dependencies {
     implementation project(':api')
     implementation project(':common')
-    implementation project(':domain')
-    implementation project(':external-api')
     implementation project(':infra-database')
     implementation project(':service')
 

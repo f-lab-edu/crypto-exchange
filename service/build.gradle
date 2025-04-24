@@ -8,6 +8,7 @@ dependencies {
     implementation project(':domain')
     implementation project(':infra-database')
     implementation project(':external-api')
+    implementation project(':common')
 
     implementation 'org.springframework.boot:spring-boot-starter'
 }
