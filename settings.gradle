@@ -1,10 +1,5 @@
 rootProject.name = 'crypto-exchange'
-include 'api'
-include 'app-api'
-include 'app-batch'
-include 'batch'
-include 'common'
-include 'domain'
-include 'external-api'
-include 'infra-database'
-include 'service'
+
+include 'api', 'app-api', 'app-batch', 'batch', 'common', 'domain', 'external-api', 'infra-database', 'service'
+
+includeBuild 'build-logic'
