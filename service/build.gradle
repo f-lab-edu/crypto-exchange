@@ -4,8 +4,4 @@ plugins {
 }
 
 dependencies {
-    implementation project(':domain')
-    implementation project(':infra-database')
-    implementation project(':external-api')
-    implementation project(':common')
 }

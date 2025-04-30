@@ -4,8 +4,4 @@ plugins {
 }
 
 dependencies {
-    implementation project(':batch')
-    implementation project(':common')
-    implementation project(':infra-database')
-    implementation project(':service')
 }

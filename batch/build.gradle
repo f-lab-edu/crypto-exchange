@@ -3,6 +3,4 @@ plugins {
 }
 
 dependencies {
-    implementation project(':service')
-    implementation project(':common')
 }
