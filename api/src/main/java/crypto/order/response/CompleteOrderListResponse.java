@@ -17,4 +17,5 @@ public class CompleteOrderListResponse {
     private OrderSide orderSide;
     private BigDecimal price;
     private BigDecimal amount;
+    private LocalDateTime completedAt;
 }

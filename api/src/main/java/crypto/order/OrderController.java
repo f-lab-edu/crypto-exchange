@@ -72,8 +72,8 @@ public class OrderController {
         return ApiResponse.success(response);
     }
 
-    @GetMapping("/api/v1/orders")
-    public ApiResponse<PageResponse<CompleteOrderListResponse>> getOrders(
+    @GetMapping("/api/v1/orders/complete")
+    public ApiResponse<PageResponse<CompleteOrderListResponse>> getCompleteOrders(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String symbol
@@ -84,21 +84,38 @@ public class OrderController {
                 .orderSide(BUY)
                 .price(BigDecimal.valueOf(30000))
                 .amount(BigDecimal.valueOf(12.345))
+                .completedAt(LocalDateTime.of(2025, 4, 30, 1, 0))
                 .build();
 
-        List<CompleteOrderListResponse> content = List.of(response);
-        PageRequest pageRequest = PageRequest.of(page, size);
-        Page<CompleteOrderListResponse> pageResult = new PageImpl<>(content, pageRequest, content.size());
+        Page<CompleteOrderListResponse> pageResult = createPageResult(response, page, size);
 
         return ApiResponse.successPage(pageResult);
     }
 
     @GetMapping("/api/v1/orders/open")
-    public ApiResponse<Page<OpenOrderListResponse>> getOpenOrders(
+    public ApiResponse<PageResponse<OpenOrderListResponse>> getOpenOrders(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String symbol
     ) {
-        return null;
+        OpenOrderListResponse response = OpenOrderListResponse.builder()
+                .orderId("abc123xyz")
+                .symbol("BTC")
+                .orderSide(BUY)
+                .price(BigDecimal.valueOf(30000.00))
+                .requestQty(BigDecimal.valueOf(12.345))
+                .remainQty(BigDecimal.valueOf(12.345))
+                .requestedAt(LocalDateTime.of(2025, 4, 30, 1, 0))
+                .build();
+
+        Page<OpenOrderListResponse> pageResult = createPageResult(response, page, size);
+
+        return ApiResponse.successPage(pageResult);
+    }
+
+    public <T> Page<T> createPageResult(T response, int page, int size) {
+        List<T> content = List.of(response);
+        PageRequest pageRequest = PageRequest.of(page, size);
+        return new PageImpl<>(content, pageRequest, content.size());
     }
 }

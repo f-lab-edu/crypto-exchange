@@ -116,19 +116,57 @@ class OrderControllerTest {
 
     @DisplayName("유저의 체결 완료된 주문 목록들을 조회한다.")
     @Test
-    void getOrders() throws Exception {
+    void getCompleteOrders() throws Exception {
         // when // then
-        mockMvc.perform(
-                        get("/api/v1/orders/available")
-                                .contentType(MediaType.APPLICATION_JSON)
-                )
+        mockMvc.perform(get("/api/v1/orders/complete")
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.status").value("OK"))
                 .andExpect(jsonPath("$.message").value("요청이 정상적으로 처리되었습니다."))
-                .andExpect(jsonPath("$.data.currency").value("KRW"))
-                .andExpect(jsonPath("$.data.amount").value("4000000"));
+
+                // content 내부 필드 검증
+                .andExpect(jsonPath("$.data.content[0].orderId").value("abc123xyz"))
+                .andExpect(jsonPath("$.data.content[0].symbol").value("BTC"))
+                .andExpect(jsonPath("$.data.content[0].orderSide").value("BUY"))
+                .andExpect(jsonPath("$.data.content[0].price").value(30000))
+                .andExpect(jsonPath("$.data.content[0].amount").value(12.345))
+                .andExpect(jsonPath("$.data.content[0].completedAt").value("2025-04-30T01:00:00"))
+
+                // 페이징 정보 검증
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.totalPages").value(1))
+                .andExpect(jsonPath("$.data.size").value(10))
+                .andExpect(jsonPath("$.data.number").value(0));
+    }
+
+    @DisplayName("유저의 미체결 된 주문 목록들을 조회한다.")
+    @Test
+    void getOpenOrders() throws Exception {
+        // when // then
+        mockMvc.perform(get("/api/v1/orders/open")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.status").value("OK"))
+                .andExpect(jsonPath("$.message").value("요청이 정상적으로 처리되었습니다."))
+
+                // content 내부 필드 검증
+                .andExpect(jsonPath("$.data.content[0].orderId").value("abc123xyz"))
+                .andExpect(jsonPath("$.data.content[0].symbol").value("BTC"))
+                .andExpect(jsonPath("$.data.content[0].orderSide").value("BUY"))
+                .andExpect(jsonPath("$.data.content[0].price").value(30000.00))
+                .andExpect(jsonPath("$.data.content[0].requestQty").value(12.345))
+                .andExpect(jsonPath("$.data.content[0].remainQty").value(12.345))
+                .andExpect(jsonPath("$.data.content[0].requestedAt").value("2025-04-30T01:00:00"))
+
+                // 페이징 정보 검증
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.totalPages").value(1))
+                .andExpect(jsonPath("$.data.size").value(10))
+                .andExpect(jsonPath("$.data.number").value(0));
     }
 
     private void mockCreateOrderResponse(OrderRequest request) throws Exception {
