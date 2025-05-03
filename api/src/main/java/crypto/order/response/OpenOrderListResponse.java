@@ -15,8 +15,8 @@ public class OpenOrderListResponse {
     private String orderId;
     private String symbol;
     private OrderSide orderSide;
-    private Integer price;
+    private BigDecimal price;
     private BigDecimal requestQty;
     private BigDecimal remainQty;
-    private LocalDateTime createdAt;
+    private LocalDateTime requestedAt;
 }
