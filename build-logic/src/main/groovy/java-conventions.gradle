@@ -14,3 +14,9 @@ java {
 repositories {
     mavenCentral()
 }
+
+dependencies {
+    // lombok
+    compileOnly 'org.projectlombok:lombok:1.18.36'
+    annotationProcessor 'org.projectlombok:lombok:1.18.36'
+}
