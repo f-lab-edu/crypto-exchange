@@ -4,4 +4,6 @@ plugins {
 }
 
 dependencies {
+    implementation project(':api')
+    runtimeOnly 'com.h2database:h2'
 }
