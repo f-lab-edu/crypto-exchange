@@ -1,80 +1,169 @@
 package crypto.order;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import crypto.order.request.LimitOrderRequest;
 import crypto.order.request.MarketBuyOrderRequest;
 import crypto.order.request.MarketSellOrderRequest;
-import crypto.order.request.OrderRequest;
+import crypto.order.response.*;
+import crypto.response.ApiResponse;
+import crypto.config.SecurityConfig;
+import crypto.order.request.LimitBuyOrderRequest;
+import crypto.order.request.LimitSellOrderRequest;
+
+import crypto.response.PageResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static crypto.order.OrderSide.*;
+import static org.assertj.core.api.Assertions.*;
 
-
-@WebMvcTest(controllers = OrderController.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Import(SecurityConfig.class)
 class OrderControllerTest {
 
     @Autowired
-    private MockMvc mockMvc;
+    private TestRestTemplate restTemplate;
 
     @Autowired
     private ObjectMapper objectMapper;
 
-    @DisplayName("지정가 주문을 요청한다.")
+    @DisplayName("지정가 구매 주문을 요청한다.")
     @Test
-    void createLimitOrder() throws Exception {
+    void createLimitBuyOrder() throws Exception {
         // given
-        OrderRequest request = LimitOrderRequest.builder()
+        LimitBuyOrderRequest request = LimitBuyOrderRequest.builder()
                 .symbol("BTC")
                 .orderType(OrderType.LIMIT)
-                .orderSide(OrderSide.BUY)
-                .price(5000000)
+                .orderSide(BUY)
+                .price(BigDecimal.valueOf(50000))
                 .quantity(BigDecimal.valueOf(1.2345))
                 .build();
 
-        // when // then
-        mockCreateOrderResponse(request);
+        // when
+        ResponseEntity<String> response = restTemplate.postForEntity(
+                "/api/v1/orders/limit/buy",
+                request,
+                String.class
+        );
+
+        // then
+        ApiResponse<OrderCreateResponse> apiResponse = objectMapper.readValue(
+                response.getBody(),
+                new TypeReference<ApiResponse<OrderCreateResponse>>() {}
+        );
+
+        assertThat(apiResponse.getCode()).isEqualTo(200);
+        assertThat(apiResponse.getStatus()).isEqualTo(HttpStatus.OK);
+        assertThat(apiResponse.getMessage()).isEqualTo("요청이 정상적으로 처리되었습니다.");
+
+        assertThat(apiResponse.getData().getOrderId()).isEqualTo("abc123xyz");
+        assertThat(apiResponse.getData().getCreateAt()).isEqualTo("2025-04-30T01:00:00");
+    }
+
+    @DisplayName("지정가 판매 주문을 요청한다.")
+    @Test
+    void createLimitSellOrder() throws Exception {
+        // given
+        LimitSellOrderRequest request = LimitSellOrderRequest.builder()
+                .symbol("BTC")
+                .orderType(OrderType.MARKET)
+                .orderSide(BUY)
+                .price(BigDecimal.valueOf(500000))
+                .quantity(BigDecimal.valueOf(1.2345))
+                .build();
+
+        // when
+        ResponseEntity<String> response = restTemplate.postForEntity(
+                "/api/v1/orders/limit/sell",
+                request,
+                String.class
+        );
+
+        // then
+        ApiResponse<OrderCreateResponse> apiResponse = objectMapper.readValue(
+                response.getBody(),
+                new TypeReference<ApiResponse<OrderCreateResponse>>() {}
+        );
+
+        assertThat(apiResponse.getCode()).isEqualTo(200);
+        assertThat(apiResponse.getStatus()).isEqualTo(HttpStatus.OK);
+        assertThat(apiResponse.getMessage()).isEqualTo("요청이 정상적으로 처리되었습니다.");
+
+        assertThat(apiResponse.getData().getOrderId()).isEqualTo("abc123xyz");
+        assertThat(apiResponse.getData().getCreateAt()).isEqualTo("2025-04-30T01:00:00");
     }
 
     @DisplayName("시장가 매수 주문을 요청한다.")
     @Test
     void createMarketBuyOrder() throws Exception {
         // given
-        OrderRequest request = MarketBuyOrderRequest.builder()
+        MarketBuyOrderRequest request = MarketBuyOrderRequest.builder()
                 .symbol("BTC")
-                .orderType(OrderType.MARKET)
-                .orderSide(OrderSide.BUY)
-                .totalPrice(5000000)
+                .orderType(OrderType.LIMIT)
+                .orderSide(BUY)
+                .totalPrice(BigDecimal.valueOf(50000))
                 .build();
 
-        // when // then
-        mockCreateOrderResponse(request);
+        // when
+        ResponseEntity<String> response = restTemplate.postForEntity(
+                "/api/v1/orders/market/buy",
+                request,
+                String.class
+        );
+
+        // then
+        ApiResponse<OrderCreateResponse> apiResponse = objectMapper.readValue(
+                response.getBody(),
+                new TypeReference<ApiResponse<OrderCreateResponse>>() {}
+        );
+
+        assertThat(apiResponse.getCode()).isEqualTo(200);
+        assertThat(apiResponse.getStatus()).isEqualTo(HttpStatus.OK);
+        assertThat(apiResponse.getMessage()).isEqualTo("요청이 정상적으로 처리되었습니다.");
+
+        assertThat(apiResponse.getData().getOrderId()).isEqualTo("abc123xyz");
+        assertThat(apiResponse.getData().getCreateAt()).isEqualTo("2025-04-30T01:00:00");
     }
 
     @DisplayName("시장가 매도 주문을 요청한다.")
     @Test
     void createMarketSellOrder() throws Exception {
         // given
-        OrderRequest request = MarketSellOrderRequest.builder()
+        MarketSellOrderRequest request = MarketSellOrderRequest.builder()
                 .symbol("BTC")
                 .orderType(OrderType.LIMIT)
-                .orderSide(OrderSide.BUY)
+                .orderSide(BUY)
                 .totalAmount(BigDecimal.valueOf(1.234))
                 .build();
 
-        // when // then
-        mockCreateOrderResponse(request);
+        // when
+        ResponseEntity<String> response = restTemplate.postForEntity(
+                "/api/v1/orders/market/sell",
+                request,
+                String.class
+        );
+
+        // then
+        ApiResponse<OrderCreateResponse> apiResponse = objectMapper.readValue(
+                response.getBody(),
+                new TypeReference<ApiResponse<OrderCreateResponse>>() {}
+        );
+
+        assertThat(apiResponse.getCode()).isEqualTo(200);
+        assertThat(apiResponse.getStatus()).isEqualTo(HttpStatus.OK);
+        assertThat(apiResponse.getMessage()).isEqualTo("요청이 정상적으로 처리되었습니다.");
+
+        assertThat(apiResponse.getData().getOrderId()).isEqualTo("abc123xyz");
+        assertThat(apiResponse.getData().getCreateAt()).isEqualTo("2025-04-30T01:00:00");
     }
 
     @DisplayName("주문 취소를 요청한다.")
@@ -83,104 +172,114 @@ class OrderControllerTest {
         // given
         String orderId = "abc123xyz";
 
-        // when // then
-        mockMvc.perform(
-                        delete("/api/v1/orders/{orderId}", orderId)
-                                .contentType(MediaType.APPLICATION_JSON)
-                )
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.status").value("OK"))
-                .andExpect(jsonPath("$.message").value("요청이 정상적으로 처리되었습니다."))
-                .andExpect(jsonPath("$.data.orderId").value(orderId))
-                .andExpect(jsonPath("$.data.deletedAt").value("2025-04-30T01:00:00"));
+        // when
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/api/v1/orders/{orderId}",
+                HttpMethod.DELETE,
+                null,
+                String.class,
+                orderId
+        );
+
+        // then
+        ApiResponse<OrderDeleteResponse> apiResponse = objectMapper.readValue(
+                response.getBody(),
+                new TypeReference<ApiResponse<OrderDeleteResponse>>() {}
+        );
+
+        assertThat(apiResponse.getCode()).isEqualTo(200);
+        assertThat(apiResponse.getStatus()).isEqualTo(HttpStatus.OK);
+        assertThat(apiResponse.getMessage()).isEqualTo("요청이 정상적으로 처리되었습니다.");
+
+        assertThat(apiResponse.getData().getOrderId()).isEqualTo("abc123xyz");
+        assertThat(apiResponse.getData().getDeletedAt()).isEqualTo("2025-04-30T01:00:00");
     }
 
     @DisplayName("유저의 주문 가능 금액을 조회한다.")
     @Test
     void getAvailableAmount() throws Exception {
-        // when // then
-        mockMvc.perform(
-                        get("/api/v1/orders/available")
-                                .contentType(MediaType.APPLICATION_JSON)
-                )
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.status").value("OK"))
-                .andExpect(jsonPath("$.message").value("요청이 정상적으로 처리되었습니다."))
-                .andExpect(jsonPath("$.data.currency").value("KRW"))
-                .andExpect(jsonPath("$.data.amount").value("4000000"));
+        // when
+        ResponseEntity<String> response = restTemplate.getForEntity(
+                "/api/v1/orders/available",
+                String.class
+        );
+
+        // then
+        ApiResponse<OrderAvailableResponse> apiResponse = objectMapper.readValue(
+                response.getBody(),
+                new TypeReference<ApiResponse<OrderAvailableResponse>>() {}
+        );
+
+        assertThat(apiResponse.getCode()).isEqualTo(200);
+        assertThat(apiResponse.getStatus()).isEqualTo(HttpStatus.OK);
+        assertThat(apiResponse.getMessage()).isEqualTo("요청이 정상적으로 처리되었습니다.");
+
+        assertThat(apiResponse.getData().getCurrency()).isEqualTo("KRW");
+        assertThat(apiResponse.getData().getAmount()).isEqualTo(4000000L);
     }
 
     @DisplayName("유저의 체결 완료된 주문 목록들을 조회한다.")
     @Test
     void getCompleteOrders() throws Exception {
-        // when // then
-        mockMvc.perform(get("/api/v1/orders/complete")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.status").value("OK"))
-                .andExpect(jsonPath("$.message").value("요청이 정상적으로 처리되었습니다."))
+        // when
+        ResponseEntity<String> response = restTemplate.getForEntity(
+                "/api/v1/orders/complete",
+                String.class
+        );
 
-                // content 내부 필드 검증
-                .andExpect(jsonPath("$.data.content[0].orderId").value("abc123xyz"))
-                .andExpect(jsonPath("$.data.content[0].symbol").value("BTC"))
-                .andExpect(jsonPath("$.data.content[0].orderSide").value("BUY"))
-                .andExpect(jsonPath("$.data.content[0].price").value(30000))
-                .andExpect(jsonPath("$.data.content[0].amount").value(12.345))
-                .andExpect(jsonPath("$.data.content[0].completedAt").value("2025-04-30T01:00:00"))
+        // then
+        ApiResponse<PageResponse<CompleteOrderListResponse>> apiResponse = objectMapper.readValue(
+                response.getBody(),
+                new TypeReference<ApiResponse<PageResponse<CompleteOrderListResponse>>>() {}
+        );
 
-                // 페이징 정보 검증
-                .andExpect(jsonPath("$.data.totalElements").value(1))
-                .andExpect(jsonPath("$.data.totalPages").value(1))
-                .andExpect(jsonPath("$.data.size").value(10))
-                .andExpect(jsonPath("$.data.number").value(0));
+        assertThat(apiResponse.getCode()).isEqualTo(200);
+        assertThat(apiResponse.getStatus()).isEqualTo(HttpStatus.OK);
+        assertThat(apiResponse.getMessage()).isEqualTo("요청이 정상적으로 처리되었습니다.");
+
+        assertThat(apiResponse.getData().getContent().getFirst().getOrderId()).isEqualTo("abc123xyz");
+        assertThat(apiResponse.getData().getContent().getFirst().getSymbol()).isEqualTo("BTC");
+        assertThat(apiResponse.getData().getContent().getFirst().getOrderSide()).isEqualTo(BUY);
+        assertThat(apiResponse.getData().getContent().getFirst().getPrice()).isEqualTo(BigDecimal.valueOf(30000));
+        assertThat(apiResponse.getData().getContent().getFirst().getAmount()).isEqualTo(BigDecimal.valueOf(12.345));
+        assertThat(apiResponse.getData().getContent().getFirst().getCompletedAt()).isEqualTo("2025-04-30T01:00:00");
+
+        assertThat(apiResponse.getData().getTotalElements()).isEqualTo(1);
+        assertThat(apiResponse.getData().getTotalPages()).isEqualTo(1);
+        assertThat(apiResponse.getData().getSize()).isEqualTo(10);
+        assertThat(apiResponse.getData().getNumber()).isEqualTo(0);
     }
 
     @DisplayName("유저의 미체결 된 주문 목록들을 조회한다.")
     @Test
     void getOpenOrders() throws Exception {
-        // when // then
-        mockMvc.perform(get("/api/v1/orders/open")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.status").value("OK"))
-                .andExpect(jsonPath("$.message").value("요청이 정상적으로 처리되었습니다."))
+        // when
+        ResponseEntity<String> response = restTemplate.getForEntity(
+                "/api/v1/orders/open",
+                String.class
+        );
 
-                // content 내부 필드 검증
-                .andExpect(jsonPath("$.data.content[0].orderId").value("abc123xyz"))
-                .andExpect(jsonPath("$.data.content[0].symbol").value("BTC"))
-                .andExpect(jsonPath("$.data.content[0].orderSide").value("BUY"))
-                .andExpect(jsonPath("$.data.content[0].price").value(30000.00))
-                .andExpect(jsonPath("$.data.content[0].requestQty").value(12.345))
-                .andExpect(jsonPath("$.data.content[0].remainQty").value(12.345))
-                .andExpect(jsonPath("$.data.content[0].requestedAt").value("2025-04-30T01:00:00"))
+        // then
+        ApiResponse<PageResponse<OpenOrderListResponse>> apiResponse = objectMapper.readValue(
+                response.getBody(),
+                new TypeReference<ApiResponse<PageResponse<OpenOrderListResponse>>>() {}
+        );
 
-                // 페이징 정보 검증
-                .andExpect(jsonPath("$.data.totalElements").value(1))
-                .andExpect(jsonPath("$.data.totalPages").value(1))
-                .andExpect(jsonPath("$.data.size").value(10))
-                .andExpect(jsonPath("$.data.number").value(0));
-    }
+        assertThat(apiResponse.getCode()).isEqualTo(200);
+        assertThat(apiResponse.getStatus()).isEqualTo(HttpStatus.OK);
+        assertThat(apiResponse.getMessage()).isEqualTo("요청이 정상적으로 처리되었습니다.");
 
-    private void mockCreateOrderResponse(OrderRequest request) throws Exception {
-        mockMvc.perform(
-                        post("/api/v1/orders")
-                                .content(objectMapper.writeValueAsString(request))
-                                .contentType(MediaType.APPLICATION_JSON)
-                )
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.status").value("OK"))
-                .andExpect(jsonPath("$.message").value("요청이 정상적으로 처리되었습니다."))
-                .andExpect(jsonPath("$.data.orderId").value("abc123xyz"))
-                .andExpect(jsonPath("$.data.createAt").value("2025-04-30T01:00:00"));
+        assertThat(apiResponse.getData().getContent().getFirst().getOrderId()).isEqualTo("abc123xyz");
+        assertThat(apiResponse.getData().getContent().getFirst().getSymbol()).isEqualTo("BTC");
+        assertThat(apiResponse.getData().getContent().getFirst().getOrderSide()).isEqualTo(BUY);
+        assertThat(apiResponse.getData().getContent().getFirst().getPrice()).isEqualTo(BigDecimal.valueOf(30000.00));
+        assertThat(apiResponse.getData().getContent().getFirst().getRequestQty()).isEqualTo(BigDecimal.valueOf(12.345));
+        assertThat(apiResponse.getData().getContent().getFirst().getRemainQty()).isEqualTo(BigDecimal.valueOf(12.345));
+        assertThat(apiResponse.getData().getContent().getFirst().getRequestedAt()).isEqualTo("2025-04-30T01:00:00");
+
+        assertThat(apiResponse.getData().getTotalElements()).isEqualTo(1);
+        assertThat(apiResponse.getData().getTotalPages()).isEqualTo(1);
+        assertThat(apiResponse.getData().getSize()).isEqualTo(10);
+        assertThat(apiResponse.getData().getNumber()).isEqualTo(0);
     }
 }

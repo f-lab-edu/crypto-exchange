@@ -1,12 +1,7 @@
 package crypto.order;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import crypto.PageResponse;
-import crypto.order.request.LimitOrderRequest;
-import crypto.order.request.MarketBuyOrderRequest;
-import crypto.order.request.MarketSellOrderRequest;
-import crypto.ApiResponse;
-import crypto.order.request.OrderRequest;
+import crypto.response.PageResponse;
+import crypto.response.ApiResponse;
 import crypto.order.response.*;
 
 import lombok.RequiredArgsConstructor;
@@ -18,32 +13,46 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 import static crypto.order.OrderSide.*;
+
 
 @RequiredArgsConstructor
 @RestController
 public class OrderController {
 
-    private final ObjectMapper objectMapper;
+    @PostMapping("/api/v1/orders/limit/buy")
+    public ApiResponse<OrderCreateResponse> createLimitBuyOrder() {
+        OrderCreateResponse response = OrderCreateResponse.builder()
+                .orderId("abc123xyz")
+                .createAt(LocalDateTime.of(2025, 4, 30, 1, 0))
+                .build();
 
-    @PostMapping("/api/v1/orders")
-    public ApiResponse<OrderCreateResponse> createOrder(@RequestBody Map<String, Object> rawJson) {
-        String orderType = (String) rawJson.get("orderType");
-        String orderSide = (String) rawJson.get("orderSide");
-        OrderRequest request;
+        return ApiResponse.success(response);
+    }
 
-        if ("LIMIT".equals(orderType)) {
-            request = objectMapper.convertValue(rawJson, LimitOrderRequest.class);
-        } else if ("MARKET".equals(orderType) && "BUY".equals(orderSide)) {
-            request = objectMapper.convertValue(rawJson, MarketBuyOrderRequest.class);
-        } else if ("MARKET".equals(orderType) && "SELL".equals(orderSide)) {
-            request = objectMapper.convertValue(rawJson, MarketSellOrderRequest.class);
-        } else {
-            throw new IllegalArgumentException("지원하지 않는 주문 타입입니다");
-        }
+    @PostMapping("/api/v1/orders/limit/sell")
+    public ApiResponse<OrderCreateResponse> createLimitSellOrder() {
+        OrderCreateResponse response = OrderCreateResponse.builder()
+                .orderId("abc123xyz")
+                .createAt(LocalDateTime.of(2025, 4, 30, 1, 0))
+                .build();
 
+        return ApiResponse.success(response);
+    }
+
+    @PostMapping("/api/v1/orders/market/buy")
+    public ApiResponse<OrderCreateResponse> createMarketBuyOrder() {
+        OrderCreateResponse response = OrderCreateResponse.builder()
+                .orderId("abc123xyz")
+                .createAt(LocalDateTime.of(2025, 4, 30, 1, 0))
+                .build();
+
+        return ApiResponse.success(response);
+    }
+
+    @PostMapping("/api/v1/orders/market/sell")
+    public ApiResponse<OrderCreateResponse> createMarketSellOrder() {
         OrderCreateResponse response = OrderCreateResponse.builder()
                 .orderId("abc123xyz")
                 .createAt(LocalDateTime.of(2025, 4, 30, 1, 0))

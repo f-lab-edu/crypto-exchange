@@ -1,7 +1,0 @@
-plugins {
-    id 'java-conventions'
-    id 'spring-batch-conventions'
-}
-
-dependencies {
-}

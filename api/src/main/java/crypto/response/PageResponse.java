@@ -1,4 +1,4 @@
-package crypto;
+package crypto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
