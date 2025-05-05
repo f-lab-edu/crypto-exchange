@@ -1,16 +1,21 @@
 package crypto.order.response;
 
 import crypto.order.OrderSide;
+import lombok.Builder;
+import lombok.Getter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-public class OpenOrderResponse {
+
+@Getter
+@Builder
+public class OpenOrderListResponse {
 
     private String orderId;
     private String symbol;
-    private OrderSide side;
-    private BigDecimal price;
+    private OrderSide orderSide;
+    private Integer price;
     private BigDecimal requestQty;
     private BigDecimal remainQty;
     private LocalDateTime createdAt;
