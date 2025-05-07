@@ -11,18 +11,20 @@ import java.math.BigDecimal;
 
 @Getter
 @NoArgsConstructor
-public class MarketBuyOrderRequest {
+public class LimitSellOrderRequest {
 
     private String symbol;
     private OrderType orderType;
     private OrderSide orderSide;
-    private BigDecimal totalPrice;
+    private BigDecimal price;
+    private BigDecimal quantity;
 
     @Builder
-    public MarketBuyOrderRequest(String symbol, OrderType orderType, OrderSide orderSide, BigDecimal totalPrice) {
+    public LimitSellOrderRequest(String symbol, OrderType orderType, OrderSide orderSide, BigDecimal price, BigDecimal quantity) {
         this.symbol = symbol;
         this.orderType = orderType;
         this.orderSide = orderSide;
-        this.totalPrice = totalPrice;
+        this.price = price;
+        this.quantity = quantity;
     }
 }

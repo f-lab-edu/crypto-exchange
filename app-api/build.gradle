@@ -1,9 +1,0 @@
-plugins {
-    id 'java-conventions'
-    id 'spring-app-conventions'
-}
-
-dependencies {
-    implementation project(':api')
-    runtimeOnly 'com.h2database:h2'
-}
