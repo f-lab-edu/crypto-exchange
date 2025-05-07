@@ -1,5 +1,6 @@
 package crypto.order.response;
 
+import crypto.order.Order;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -7,9 +8,21 @@ import java.time.LocalDateTime;
 
 
 @Getter
-@Builder
 public class OrderDeleteResponse {
 
-    private String orderId;
+    private Long orderId;
     private LocalDateTime deletedAt;
+
+    @Builder
+    public OrderDeleteResponse(Long orderId, LocalDateTime deletedAt) {
+        this.orderId = orderId;
+        this.deletedAt = deletedAt;
+    }
+
+    public static OrderDeleteResponse of(Order order) {
+        return OrderDeleteResponse.builder()
+                .orderId(order.getId())
+                .deletedAt(order.getRegisteredDateTime())
+                .build();
+    }
 }

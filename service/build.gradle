@@ -1,7 +1,12 @@
 plugins {
     id 'java-conventions'
-    id 'spring-app-conventions'
+    id 'service-conventions'
 }
 
 dependencies {
+    implementation project(':domain')
+    implementation project(':common')
+    implementation project(':infra-database')
+
+    testImplementation project(":api")
 }

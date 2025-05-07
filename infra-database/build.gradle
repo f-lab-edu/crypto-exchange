@@ -1,6 +1,8 @@
 plugins {
     id 'java-conventions'
+    id 'domain-db-conventions'
 }
 
 dependencies {
+    implementation project(':domain')
 }

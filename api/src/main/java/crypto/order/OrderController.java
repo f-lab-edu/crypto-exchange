@@ -1,9 +1,13 @@
 package crypto.order;
 
+import crypto.order.request.LimitOrderRequest;
+import crypto.order.request.MarketBuyOrderRequest;
+import crypto.order.request.MarketSellOrderRequest;
 import crypto.response.PageResponse;
 import crypto.response.ApiResponse;
 import crypto.order.response.*;
 
+import crypto.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -21,74 +25,62 @@ import static crypto.order.OrderSide.*;
 @RestController
 public class OrderController {
 
-    @PostMapping("/api/v1/orders/limit/buy")
-    public ApiResponse<OrderCreateResponse> createLimitBuyOrder() {
-        OrderCreateResponse response = OrderCreateResponse.builder()
-                .orderId("abc123xyz")
-                .createAt(LocalDateTime.of(2025, 4, 30, 1, 0))
-                .build();
+    private final OrderService orderService;
 
-        return ApiResponse.success(response);
+    @PostMapping("/api/v1/orders/limit/buy")
+    public ApiResponse<OrderCreateResponse> createLimitBuyOrder(@RequestBody LimitOrderRequest request) {
+        LocalDateTime registeredDateTime = LocalDateTime.now();
+        Order order = orderService.createLimitBuyOrder(request.toServiceRequest(), registeredDateTime);
+
+        return ApiResponse.success(OrderCreateResponse.of(order));
     }
 
     @PostMapping("/api/v1/orders/limit/sell")
-    public ApiResponse<OrderCreateResponse> createLimitSellOrder() {
-        OrderCreateResponse response = OrderCreateResponse.builder()
-                .orderId("abc123xyz")
-                .createAt(LocalDateTime.of(2025, 4, 30, 1, 0))
-                .build();
+    public ApiResponse<OrderCreateResponse> createLimitSellOrder(@RequestBody LimitOrderRequest request) {
+        LocalDateTime registeredDateTime = LocalDateTime.now();
+        Order order = orderService.createLimitSellOrder(request.toServiceRequest(), registeredDateTime);
 
-        return ApiResponse.success(response);
+        return ApiResponse.success(OrderCreateResponse.of(order));
     }
 
     @PostMapping("/api/v1/orders/market/buy")
-    public ApiResponse<OrderCreateResponse> createMarketBuyOrder() {
-        OrderCreateResponse response = OrderCreateResponse.builder()
-                .orderId("abc123xyz")
-                .createAt(LocalDateTime.of(2025, 4, 30, 1, 0))
-                .build();
+    public ApiResponse<OrderCreateResponse> createMarketBuyOrder(@RequestBody MarketBuyOrderRequest request) {
+        LocalDateTime registeredDateTime = LocalDateTime.now();
+        Order order = orderService.createMarketBuyOrder(request.toServiceRequest(), registeredDateTime);
 
-        return ApiResponse.success(response);
+        return ApiResponse.success(OrderCreateResponse.of(order));
     }
 
     @PostMapping("/api/v1/orders/market/sell")
-    public ApiResponse<OrderCreateResponse> createMarketSellOrder() {
-        OrderCreateResponse response = OrderCreateResponse.builder()
-                .orderId("abc123xyz")
-                .createAt(LocalDateTime.of(2025, 4, 30, 1, 0))
-                .build();
+    public ApiResponse<OrderCreateResponse> createMarketSellOrder(@RequestBody MarketSellOrderRequest request) {
+        LocalDateTime registeredDatetime = LocalDateTime.now();
+        Order order = orderService.createMarketSellOrder(request.toServiceRequest(), registeredDatetime);
 
-        return ApiResponse.success(response);
+        return ApiResponse.success(OrderCreateResponse.of(order));
     }
 
     @DeleteMapping("/api/v1/orders/{orderId}")
-    public ApiResponse<OrderDeleteResponse> deleteOrder(@PathVariable String orderId) {
-        OrderDeleteResponse response = OrderDeleteResponse.builder()
-                .orderId(orderId)
-                .deletedAt(LocalDateTime.of(2025, 4, 30, 1, 0))
-                .build();
+    public ApiResponse<OrderDeleteResponse> deleteOrder(@PathVariable Long orderId) {
+        LocalDateTime deletedDateTime = LocalDateTime.now();
+        Order order = orderService.deleteOrder(orderId, deletedDateTime);
 
-        return ApiResponse.success(response);
+        return ApiResponse.success(OrderDeleteResponse.of(order));
     }
 
     @GetMapping("/api/v1/orders/available")
     public ApiResponse<OrderAvailableResponse> getAvailableAmount() {
-        OrderAvailableResponse response = OrderAvailableResponse.builder()
-                .currency("KRW")
-                .amount(4000000)
-                .build();
+        User user = orderService.getUser();
 
-        return ApiResponse.success(response);
+        return ApiResponse.success(OrderAvailableResponse.of(user));
     }
 
     @GetMapping("/api/v1/orders/complete")
     public ApiResponse<PageResponse<CompleteOrderListResponse>> getCompleteOrders(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String symbol
+            @RequestParam(defaultValue = "10") int size
     ) {
         CompleteOrderListResponse response = CompleteOrderListResponse.builder()
-                .orderId("abc123xyz")
+                .orderId(1234L)
                 .symbol("BTC")
                 .orderSide(BUY)
                 .price(BigDecimal.valueOf(30000))
@@ -104,11 +96,10 @@ public class OrderController {
     @GetMapping("/api/v1/orders/open")
     public ApiResponse<PageResponse<OpenOrderListResponse>> getOpenOrders(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String symbol
+            @RequestParam(defaultValue = "10") int size
     ) {
         OpenOrderListResponse response = OpenOrderListResponse.builder()
-                .orderId("abc123xyz")
+                .orderId(1234L)
                 .symbol("BTC")
                 .orderSide(BUY)
                 .price(BigDecimal.valueOf(30000.00))
