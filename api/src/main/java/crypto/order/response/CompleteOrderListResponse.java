@@ -1,6 +1,6 @@
 package crypto.order.response;
 
-
+import crypto.order.Order;
 import crypto.order.OrderSide;
 import lombok.Builder;
 import lombok.Getter;
@@ -12,10 +12,30 @@ import java.time.LocalDateTime;
 @Builder
 public class CompleteOrderListResponse {
 
-    private String orderId;
+    private Long orderId;
     private String symbol;
     private OrderSide orderSide;
     private BigDecimal price;
     private BigDecimal amount;
     private LocalDateTime completedAt;
+
+    @Builder
+    public CompleteOrderListResponse(Long orderId, String symbol, OrderSide orderSide, BigDecimal price, BigDecimal amount, LocalDateTime completedAt) {
+        this.orderId = orderId;
+        this.symbol = symbol;
+        this.orderSide = orderSide;
+        this.price = price;
+        this.amount = amount;
+        this.completedAt = completedAt;
+    }
+
+    public static CompleteOrderListResponse of(Order order) {
+        return CompleteOrderListResponse.builder()
+                .orderId(order.getId())
+                .symbol(order.getSymbol())
+                .orderSide(order.getOrderSide())
+                .price(order.getPrice())
+                .amount(order.getQuantity())
+                .build();
+    }
 }

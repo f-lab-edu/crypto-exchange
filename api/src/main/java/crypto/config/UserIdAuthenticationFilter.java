@@ -19,7 +19,7 @@ public class UserIdAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        String userId = request.getHeader("userId");
+        String userId = request.getHeader("X-UID");
 
         if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             Authentication authentication = new UsernamePasswordAuthenticationToken(

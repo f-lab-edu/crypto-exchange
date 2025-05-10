@@ -1,7 +1,5 @@
 package crypto.order.request;
 
-import crypto.order.OrderSide;
-import crypto.order.OrderType;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,15 +12,18 @@ import java.math.BigDecimal;
 public class MarketBuyOrderRequest {
 
     private String symbol;
-    private OrderType orderType;
-    private OrderSide orderSide;
     private BigDecimal totalPrice;
 
     @Builder
-    public MarketBuyOrderRequest(String symbol, OrderType orderType, OrderSide orderSide, BigDecimal totalPrice) {
+    public MarketBuyOrderRequest(String symbol, BigDecimal totalPrice) {
         this.symbol = symbol;
-        this.orderType = orderType;
-        this.orderSide = orderSide;
         this.totalPrice = totalPrice;
+    }
+
+    public MarketBuyOrderServiceRequest toServiceRequest() {
+        return MarketBuyOrderServiceRequest.builder()
+                .symbol(symbol)
+                .totalPrice(totalPrice)
+                .build();
     }
 }
