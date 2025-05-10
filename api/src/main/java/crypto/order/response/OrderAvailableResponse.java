@@ -1,7 +1,10 @@
 package crypto.order.response;
 
+import crypto.user.User;
 import lombok.Builder;
 import lombok.Getter;
+
+import java.math.BigDecimal;
 
 
 @Getter
@@ -9,5 +12,18 @@ import lombok.Getter;
 public class OrderAvailableResponse {
 
     private String currency;
-    private long amount;
+    private BigDecimal amount;
+
+    @Builder
+    public OrderAvailableResponse(String currency, BigDecimal amount) {
+        this.currency = currency;
+        this.amount = amount;
+    }
+
+    public static OrderAvailableResponse of(User user) {
+        return OrderAvailableResponse.builder()
+                .currency("KRW")
+                .amount(user.getAvailableBalance())
+                .build();
+    }
 }

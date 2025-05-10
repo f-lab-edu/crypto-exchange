@@ -4,7 +4,7 @@ import lombok.Getter;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 
-import static crypto.order.OrderResponseCode.*;
+import static crypto.CommonResponseCode.*;
 
 @Getter
 public class ApiResponse<T> {

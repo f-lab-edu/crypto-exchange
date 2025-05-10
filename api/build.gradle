@@ -1,10 +1,11 @@
 plugins {
     id 'java-conventions'
-    id 'spring-api-conventions'
+    id 'api-conventions'
 }
 
 dependencies {
     implementation project(':domain')
     implementation project(':common')
+    implementation project(':service')
     runtimeOnly 'com.h2database:h2'
 }
