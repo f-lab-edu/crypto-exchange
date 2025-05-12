@@ -14,15 +14,19 @@ public class ApiResponse<T> {
     private String message;
     private T data;
 
-    public ApiResponse(int code, HttpStatus status, String message, T data) {
-        this.code = code;
+    public ApiResponse(HttpStatus status, String message, T data) {
+        this.code = status.value();
         this.status = status;
         this.message = message;
         this.data = data;
     }
 
+    public static <T> ApiResponse<T> of(HttpStatus httpStatus, String message, T data) {
+        return new ApiResponse<>(httpStatus, message, data);
+    }
+
     public static <T> ApiResponse<T> success(T data) {
-        return new ApiResponse<>(SUCCESS.getCode(), HttpStatus.OK, SUCCESS.getMessage(), data);
+        return of(HttpStatus.OK, SUCCESS.getMessage(), data);
     }
 
     public static <T> ApiResponse<PageResponse<T>> successPage(Page<T> page) {

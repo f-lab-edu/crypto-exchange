@@ -1,23 +1,28 @@
 package crypto.order;
 
 import crypto.context.UserContext;
+import crypto.order.exception.OrderNotFoundException;
 import crypto.order.request.LimitOrderServiceRequest;
 import crypto.order.request.MarketBuyOrderServiceRequest;
 import crypto.order.request.MarketSellOrderServiceRequest;
+import crypto.order.response.*;
+import crypto.time.TimeProvider;
 import crypto.user.User;
 import crypto.user.UserRepository;
 
+import crypto.user.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
-import static crypto.CommonResponseCode.*;
 import static crypto.order.OrderSide.*;
+import static crypto.order.OrderStatus.*;
 
 
 @Transactional
@@ -27,52 +32,74 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
+    private final TimeProvider timeProvider;
 
-    public Order createLimitBuyOrder(LimitOrderServiceRequest request, LocalDateTime registeredDateTime) {
+    public OrderCreateResponse createLimitBuyOrder(LimitOrderServiceRequest request) {
+        LocalDateTime registeredDateTime = timeProvider.now();
+        Order order = orderRepository.save(setLimitOrder(request, BUY, getUser(), registeredDateTime));
 
-        return orderRepository.save(setLimitOrder(request, BUY, getUser(), registeredDateTime));
+        return OrderCreateResponse.of(order);
     }
 
-    public Order createLimitSellOrder(LimitOrderServiceRequest request, LocalDateTime registeredDateTime) {
+    public OrderCreateResponse createLimitSellOrder(LimitOrderServiceRequest request) {
+        LocalDateTime registeredDateTime = timeProvider.now();
+        Order order = orderRepository.save(setLimitOrder(request, SELL, getUser(), registeredDateTime));
 
-        return orderRepository.save(setLimitOrder(request, SELL, getUser(), registeredDateTime));
+        return OrderCreateResponse.of(order);
     }
 
-    public Order createMarketBuyOrder(MarketBuyOrderServiceRequest request, LocalDateTime registeredDateTime) {
+    public OrderCreateResponse createMarketBuyOrder(MarketBuyOrderServiceRequest request) {
         String symbol = request.getSymbol();
         BigDecimal totalPrice = request.getTotalPrice();
+        LocalDateTime registeredDateTime = timeProvider.now();
 
-        Order order = Order.createMarketBuyOrder(symbol, totalPrice, getUser(), registeredDateTime);
+        Order order = orderRepository.save(Order.createMarketBuyOrder(symbol, totalPrice, getUser(), registeredDateTime));
 
-        return orderRepository.save(order);
+        return OrderCreateResponse.of(order);
     }
 
-    public Order createMarketSellOrder(MarketSellOrderServiceRequest request, LocalDateTime registeredDateTime) {
+    public OrderCreateResponse createMarketSellOrder(MarketSellOrderServiceRequest request) {
         String symbol = request.getSymbol();
         BigDecimal totalAmount = request.getTotalAmount();
+        LocalDateTime registeredDateTime = timeProvider.now();
 
-        Order order = Order.createMarketSellOrder(symbol, totalAmount, getUser(), registeredDateTime);
+        Order order = orderRepository.save(Order.createMarketSellOrder(symbol, totalAmount, getUser(), registeredDateTime));
 
-        return orderRepository.save(order);
+        return OrderCreateResponse.of(order);
     }
 
-    public Order deleteOrder(Long orderId, LocalDateTime deletedDateTime) {
+    public OrderDeleteResponse deleteOrder(Long orderId) {
+        LocalDateTime deletedDateTime = timeProvider.now();
+
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        ORDER_NOT_FOUND.getMessage())
-                );
+                .orElseThrow(OrderNotFoundException::new);
+
         order.setDeleted(deletedDateTime);
 
-        return order;
+        return OrderDeleteResponse.of(order);
     }
 
-    public User getUser() {
+    public OrderAvailableResponse getAvailableAmount() {
+        User user = getUser();
+
+        return OrderAvailableResponse.of(user);
+    }
+
+    public Page<CompleteOrderListResponse> getCompleteOrders(Pageable pageable) {
+
+        return orderRepository.findByUserIdAndOrderStatus(getUser().getId(), FILLED, pageable)
+                .map(CompleteOrderListResponse::of);
+    }
+
+    public Page<OpenOrderListResponse> getOpenOrders(Pageable pageable) {
+
+        return orderRepository.findByUserIdAndOrderStatusIn(getUser().getId(), List.of(PARTIAL, OPEN), pageable)
+                .map(OpenOrderListResponse::of);
+    }
+
+    private User getUser() {
         return userRepository.findById(UserContext.getUserId())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        USER_NOT_FOUND.getMessage())
-                );
+                .orElseThrow(UserNotFoundException::new);
     }
 
     private Order setLimitOrder(LimitOrderServiceRequest request, OrderSide orderSide, User user, LocalDateTime registeredDateTime) {

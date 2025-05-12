@@ -3,7 +3,7 @@ spring:
     default: local
 
   datasource:
-    url: jdbc:h2:mem:~/AppApiApplication
+    url: jdbc:h2:tcp://localhost/~/AppApiApplication
     driver-class-name: org.h2.Driver
     username: sa
     password:
@@ -39,6 +39,12 @@ spring:
     activate:
       on-profile: test
 
+  datasource:
+    url: jdbc:h2:mem:~/AppApiApplication
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
   jpa:
     hibernate:
       ddl-auto: create
@@ -46,7 +52,4 @@ spring:
     properties:
       hibernate:
         format_sql: true
-
-  sql:
-    init:
-      mode: never
+    defer-datasource-initialization: true
