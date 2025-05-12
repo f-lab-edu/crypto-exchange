@@ -36,6 +36,7 @@ public class CompleteOrderListResponse {
                 .orderSide(order.getOrderSide())
                 .price(order.getPrice())
                 .amount(order.getQuantity())
+                .completedAt(order.getRegisteredDateTime())
                 .build();
     }
 }

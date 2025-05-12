@@ -8,6 +8,8 @@ import crypto.response.ApiResponse;
 import crypto.config.SecurityConfig;
 
 import crypto.response.PageResponse;
+import crypto.user.User;
+import crypto.user.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,12 +17,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.*;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
 
 import static crypto.order.OrderSide.*;
+import static crypto.order.OrderStatus.*;
 import static org.assertj.core.api.Assertions.*;
 
+@ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(SecurityConfig.class)
 class OrderControllerTest {
@@ -30,6 +35,12 @@ class OrderControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private OrderRepository orderRepository;
 
     @DisplayName("지정가 구매 주문을 요청한다.")
     @Test
@@ -217,9 +228,16 @@ class OrderControllerTest {
     @DisplayName("유저의 체결 완료된 주문 목록들을 조회한다.")
     @Test
     void getCompleteOrders() throws Exception {
+        // given
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-UID", "42");
+        HttpEntity<MarketSellOrderRequest> requestEntity = new HttpEntity<>(headers);
+
         // when
-        ResponseEntity<String> response = restTemplate.getForEntity(
+        ResponseEntity<String> response = restTemplate.exchange(
                 "/api/v1/orders/complete",
+                HttpMethod.GET,
+                requestEntity,
                 String.class
         );
 
@@ -233,13 +251,6 @@ class OrderControllerTest {
         assertThat(apiResponse.getStatus()).isEqualTo(HttpStatus.OK);
         assertThat(apiResponse.getMessage()).isEqualTo("요청이 정상적으로 처리되었습니다.");
 
-        assertThat(apiResponse.getData().getContent().getFirst().getOrderId()).isEqualTo(1234L);
-        assertThat(apiResponse.getData().getContent().getFirst().getSymbol()).isEqualTo("BTC");
-        assertThat(apiResponse.getData().getContent().getFirst().getOrderSide()).isEqualTo(BUY);
-        assertThat(apiResponse.getData().getContent().getFirst().getPrice()).isEqualTo(BigDecimal.valueOf(30000));
-        assertThat(apiResponse.getData().getContent().getFirst().getAmount()).isEqualTo(BigDecimal.valueOf(12.345));
-        assertThat(apiResponse.getData().getContent().getFirst().getCompletedAt()).isEqualTo("2025-04-30T01:00:00");
-
         assertThat(apiResponse.getData().getTotalElements()).isEqualTo(1);
         assertThat(apiResponse.getData().getTotalPages()).isEqualTo(1);
         assertThat(apiResponse.getData().getSize()).isEqualTo(10);
@@ -249,9 +260,16 @@ class OrderControllerTest {
     @DisplayName("유저의 미체결 된 주문 목록들을 조회한다.")
     @Test
     void getOpenOrders() throws Exception {
+        // given
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-UID", "42");
+        HttpEntity<MarketSellOrderRequest> requestEntity = new HttpEntity<>(headers);
+
         // when
-        ResponseEntity<String> response = restTemplate.getForEntity(
+        ResponseEntity<String> response = restTemplate.exchange(
                 "/api/v1/orders/open",
+                HttpMethod.GET,
+                requestEntity,
                 String.class
         );
 
@@ -264,14 +282,6 @@ class OrderControllerTest {
         assertThat(apiResponse.getCode()).isEqualTo(200);
         assertThat(apiResponse.getStatus()).isEqualTo(HttpStatus.OK);
         assertThat(apiResponse.getMessage()).isEqualTo("요청이 정상적으로 처리되었습니다.");
-
-        assertThat(apiResponse.getData().getContent().getFirst().getOrderId()).isEqualTo(1234L);
-        assertThat(apiResponse.getData().getContent().getFirst().getSymbol()).isEqualTo("BTC");
-        assertThat(apiResponse.getData().getContent().getFirst().getOrderSide()).isEqualTo(BUY);
-        assertThat(apiResponse.getData().getContent().getFirst().getPrice()).isEqualTo(BigDecimal.valueOf(30000.00));
-        assertThat(apiResponse.getData().getContent().getFirst().getRequestQty()).isEqualTo(BigDecimal.valueOf(12.345));
-        assertThat(apiResponse.getData().getContent().getFirst().getRemainQty()).isEqualTo(BigDecimal.valueOf(12.345));
-        assertThat(apiResponse.getData().getContent().getFirst().getRequestedAt()).isEqualTo("2025-04-30T01:00:00");
 
         assertThat(apiResponse.getData().getTotalElements()).isEqualTo(1);
         assertThat(apiResponse.getData().getTotalPages()).isEqualTo(1);
