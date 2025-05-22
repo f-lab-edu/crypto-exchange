@@ -11,7 +11,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ApiResponse<Object> handleBusinessException(BusinessException e) {
         return ApiResponse.of(
-                HttpStatus.BAD_REQUEST,
+                e.getStatus(),
                 e.getMessage(),
                 null
         );

@@ -53,7 +53,7 @@ class OrderServiceTest {
     void checkLimit() {
         // given
         LocalDateTime registeredDateTime = LocalDateTime.of(2025, 5, 10, 15, 0);
-        User user = User.createUser("test@email.com", valueOf(1000), valueOf(1000));
+        User user = User.createUser("test@email.com", valueOf(1000));
 
         // when
         Order order = Order.createLimitOrder("BTC", valueOf(100), valueOf(10), BUY, user, registeredDateTime);
@@ -67,7 +67,7 @@ class OrderServiceTest {
     void checkBuyMarket() {
         // given
         LocalDateTime registeredDateTime = LocalDateTime.of(2025, 5, 10, 15, 0);
-        User user = User.createUser("test@email.com", valueOf(1000), valueOf(1000));
+        User user = User.createUser("test@email.com", valueOf(1000));
 
         // when
         Order order = Order.createMarketBuyOrder("BTC", valueOf(100), user, registeredDateTime);
@@ -81,7 +81,7 @@ class OrderServiceTest {
     void checkSellMarket() {
         // given
         LocalDateTime registeredDateTime = LocalDateTime.of(2025, 5, 10, 15, 0);
-        User user = User.createUser("test@email.com", valueOf(1000), valueOf(1000));
+        User user = User.createUser("test@email.com", valueOf(1000));
 
         // when
         Order order = Order.createMarketSellOrder("BTC", valueOf(100), user, registeredDateTime);
@@ -95,7 +95,7 @@ class OrderServiceTest {
     void checkBuy() {
         // given
         LocalDateTime registeredDateTime = LocalDateTime.of(2025, 5, 10, 15, 0);
-        User user = User.createUser("test@email.com", valueOf(1000), valueOf(1000));
+        User user = User.createUser("test@email.com", valueOf(1000));
 
         // when
         Order order = Order.createMarketBuyOrder("BTC", valueOf(100), user, registeredDateTime);
@@ -109,7 +109,7 @@ class OrderServiceTest {
     void checkSell() {
         // given
         LocalDateTime registeredDateTime = LocalDateTime.of(2025, 5, 10, 15, 0);
-        User user = User.createUser("test@email.com", valueOf(1000), valueOf(1000));
+        User user = User.createUser("test@email.com", valueOf(1000));
 
         // when
         Order order = Order.createMarketSellOrder("BTC", valueOf(100), user, registeredDateTime);
@@ -123,7 +123,7 @@ class OrderServiceTest {
     void checkLimitDeletedDateTime() {
         // given
         LocalDateTime registeredDateTime = LocalDateTime.of(2025, 5, 10, 15, 0);
-        User user = User.createUser("test@email.com", valueOf(1000), valueOf(1000));
+        User user = User.createUser("test@email.com", valueOf(1000));
 
         // when
         Order order = Order.createLimitOrder("BTC", valueOf(100), valueOf(10), BUY, user, registeredDateTime);
@@ -137,7 +137,7 @@ class OrderServiceTest {
     void checkMarketBuyDeletedDateTime() {
         // given
         LocalDateTime registeredDateTime = LocalDateTime.of(2025, 5, 10, 15, 0);
-        User user = User.createUser("test@email.com", valueOf(1000), valueOf(1000));
+        User user = User.createUser("test@email.com", valueOf(1000));
 
         // when
         Order order = Order.createMarketBuyOrder("BTC", valueOf(100), user, registeredDateTime);
@@ -151,7 +151,7 @@ class OrderServiceTest {
     void checkMarketSellDeletedDateTime() {
         // given
         LocalDateTime registeredDateTime = LocalDateTime.of(2025, 5, 10, 15, 0);
-        User user = User.createUser("test@email.com", valueOf(1000), valueOf(1000));
+        User user = User.createUser("test@email.com", valueOf(1000));
 
         // when
         Order order = Order.createMarketSellOrder("BTC", valueOf(100), user, registeredDateTime);
@@ -165,7 +165,7 @@ class OrderServiceTest {
     void checkDeletedDateTime() {
         // given
         LocalDateTime dateTime = LocalDateTime.of(2025, 5, 10, 15, 0);
-        User user = User.createUser("test@email.com", valueOf(1000), valueOf(1000));
+        User user = User.createUser("test@email.com", valueOf(1000));
         Order order = Order.createMarketBuyOrder("BTC", valueOf(100), user, dateTime);
 
         // when
@@ -179,7 +179,7 @@ class OrderServiceTest {
     @Test
     void checkAvailableBalance() {
         // given
-        User user = User.createUser("test@email.com", valueOf(1000), valueOf(1000));
+        User user = User.createUser("test@email.com", valueOf(1000));
 
         // when // then
         assertThat(user.getAvailableBalance()).isEqualByComparingTo(valueOf(1000));
@@ -190,7 +190,7 @@ class OrderServiceTest {
     void checkRemainQuantity() {
         // given
         LocalDateTime registeredDateTime = LocalDateTime.of(2025, 5, 10, 15, 0);
-        User user = User.createUser("test@email.com", valueOf(1000), valueOf(1000));
+        User user = User.createUser("test@email.com", valueOf(1000));
         Order order = Order.createLimitOrder("BTC", valueOf(100), valueOf(10), BUY, user, registeredDateTime);
 
         // when

@@ -29,9 +29,8 @@ public class User extends BaseEntity {
     private String appPassword;
     private String phoneNumber;
 
-    private BigDecimal totalBalance;
-    private BigDecimal availableBalance;
-    private BigDecimal lockedBalance;
+    private BigDecimal availableBalance = BigDecimal.ZERO;
+    private BigDecimal lockedBalance = BigDecimal.ZERO;
 
     private LocalDateTime registeredDateTime;
     private LocalDateTime deletedDateTime;
@@ -40,17 +39,39 @@ public class User extends BaseEntity {
     private List<Order> orders = new ArrayList<>();
 
     @Builder
-    public User(String email, BigDecimal totalBalance, BigDecimal availableBalance) {
+    public User(String email, BigDecimal availableBalance) {
         this.email = email;
-        this.totalBalance = totalBalance;
         this.availableBalance = availableBalance;
     }
 
-    public static User createUser(String email, BigDecimal totalBalance, BigDecimal availableBalance) {
+    public static User createUser(String email, BigDecimal availableBalance) {
         return User.builder()
                 .email(email)
-                .totalBalance(totalBalance)
                 .availableBalance(availableBalance)
                 .build();
     }
+
+    public void increaseLockedBalance(BigDecimal price) {
+        this.lockedBalance = this.lockedBalance.add(price);
+        this.availableBalance = this.availableBalance.subtract(price);
+    }
+
+    public void decreaseLockedBalance(BigDecimal price) {
+        this.lockedBalance = this.lockedBalance.subtract(price);
+        this.availableBalance = this.availableBalance.add(price);
+    }
+
+    public void buyOrderSettlement(BigDecimal price) {
+        this.lockedBalance = this.lockedBalance.subtract(price);
+    }
+
+    public void sellOrderSettlement(BigDecimal price) {
+        this.availableBalance = this.availableBalance.add(price);
+    }
+
+    public void feeSettlement(BigDecimal price) {
+        this.availableBalance = this.availableBalance.subtract(price);
+    }
+
+
 }
