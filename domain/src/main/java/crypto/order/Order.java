@@ -97,16 +97,16 @@ public class Order extends BaseEntity {
                 .build();
     }
 
-    public void setDeleted(LocalDateTime deletedDateTime) {
-        this.deletedDateTime = deletedDateTime;
-    }
-
     public void fill(BigDecimal filledQuantity) {
         this.filledQuantity = filledQuantity;
     }
 
     public boolean isFullyFilled() {
         return this.quantity.compareTo(this.filledQuantity) == 0;
+    }
+
+    public void markDeleted(LocalDateTime deletedDateTime) {
+        this.deletedDateTime = deletedDateTime;
     }
 
     public void markCompleted() {
