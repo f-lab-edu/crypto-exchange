@@ -27,14 +27,18 @@ public class Order extends BaseEntity {
     private String symbol;
     private BigDecimal price;
     private BigDecimal quantity;
-    private BigDecimal totalPrice;
-    private BigDecimal totalAmount;
+    private BigDecimal filledQuantity = BigDecimal.ZERO;
+    private BigDecimal totalPrice = BigDecimal.ZERO;
+    private BigDecimal totalAmount = BigDecimal.ZERO;
 
     @Enumerated(EnumType.STRING)
     private OrderType orderType;
 
     @Enumerated(EnumType.STRING)
     private OrderSide orderSide;
+
+    @Enumerated(EnumType.STRING)
+    private OrderStatus orderStatus;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -44,7 +48,8 @@ public class Order extends BaseEntity {
     private LocalDateTime deletedDateTime;
 
     @Builder
-    public Order(String symbol, BigDecimal price, BigDecimal quantity, BigDecimal totalPrice, BigDecimal totalAmount, OrderType orderType, OrderSide orderSide, User user, LocalDateTime registeredDateTime) {
+    public Order(String symbol, BigDecimal price, BigDecimal quantity, BigDecimal totalPrice, BigDecimal totalAmount,
+                 OrderType orderType, OrderSide orderSide, OrderStatus orderStatus, User user, LocalDateTime registeredDateTime) {
         this.symbol = symbol;
         this.price = price;
         this.quantity = quantity;
@@ -52,11 +57,13 @@ public class Order extends BaseEntity {
         this.totalAmount = totalAmount;
         this.orderType = orderType;
         this.orderSide = orderSide;
+        this.orderStatus = orderStatus;
         this.user = user;
         this.registeredDateTime = registeredDateTime;
     }
 
-    public static Order createLimitOrder(String symbol, BigDecimal price, BigDecimal quantity, OrderSide orderSide, User user, LocalDateTime registeredDateTime) {
+    public static Order createLimitOrder(String symbol, BigDecimal price, BigDecimal quantity,
+                                         OrderSide orderSide, User user, LocalDateTime registeredDateTime) {
         return Order.builder()
                 .symbol(symbol)
                 .price(price)
@@ -92,5 +99,10 @@ public class Order extends BaseEntity {
 
     public void setDeleted(LocalDateTime deletedDateTime) {
         this.deletedDateTime = deletedDateTime;
+    }
+
+    public BigDecimal calculateRemainQuantity() {
+
+        return (getQuantity().subtract(getFilledQuantity())).max(BigDecimal.ZERO);
     }
 }

@@ -3,15 +3,19 @@ package crypto.user;
 import crypto.BaseEntity;
 import crypto.order.Order;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "users")
 @Entity
 public class User extends BaseEntity {
@@ -36,8 +40,17 @@ public class User extends BaseEntity {
     private List<Order> orders = new ArrayList<>();
 
     @Builder
-    public User(Long id, String email) {
-        this.id = id;
+    public User(String email, BigDecimal totalBalance, BigDecimal availableBalance) {
         this.email = email;
+        this.totalBalance = totalBalance;
+        this.availableBalance = availableBalance;
+    }
+
+    public static User createUser(String email, BigDecimal totalBalance, BigDecimal availableBalance) {
+        return User.builder()
+                .email(email)
+                .totalBalance(totalBalance)
+                .availableBalance(availableBalance)
+                .build();
     }
 }
