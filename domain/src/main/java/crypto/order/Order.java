@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import static crypto.order.OrderSide.*;
+import static crypto.order.OrderStatus.*;
 import static crypto.order.OrderType.*;
 
 @Getter
@@ -38,7 +39,7 @@ public class Order extends BaseEntity {
     private OrderSide orderSide;
 
     @Enumerated(EnumType.STRING)
-    private OrderStatus orderStatus;
+    private OrderStatus orderStatus = OPEN;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -49,7 +50,7 @@ public class Order extends BaseEntity {
 
     @Builder
     public Order(String symbol, BigDecimal price, BigDecimal quantity, BigDecimal totalPrice, BigDecimal totalAmount,
-                 OrderType orderType, OrderSide orderSide, OrderStatus orderStatus, User user, LocalDateTime registeredDateTime) {
+                 OrderType orderType, OrderSide orderSide, User user, LocalDateTime registeredDateTime) {
         this.symbol = symbol;
         this.price = price;
         this.quantity = quantity;
@@ -99,6 +100,18 @@ public class Order extends BaseEntity {
 
     public void setDeleted(LocalDateTime deletedDateTime) {
         this.deletedDateTime = deletedDateTime;
+    }
+
+    public void fill(BigDecimal filledQuantity) {
+        this.filledQuantity = filledQuantity;
+    }
+
+    public boolean isFullyFilled() {
+        return this.quantity.compareTo(this.filledQuantity) == 0;
+    }
+
+    public void markCompleted() {
+        this.orderStatus = FILLED;
     }
 
     public BigDecimal calculateRemainQuantity() {

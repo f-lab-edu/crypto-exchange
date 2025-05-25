@@ -1,12 +1,15 @@
 package crypto.order;
 
 import crypto.context.UserContext;
+import crypto.fee.FeePolicy;
+import crypto.order.exception.NotEnoughBalanceException;
 import crypto.order.exception.OrderNotFoundException;
 import crypto.order.request.LimitOrderServiceRequest;
 import crypto.order.request.MarketBuyOrderServiceRequest;
 import crypto.order.request.MarketSellOrderServiceRequest;
 import crypto.order.response.*;
 import crypto.time.TimeProvider;
+import crypto.trade.TradeService;
 import crypto.user.User;
 import crypto.user.UserRepository;
 
@@ -18,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -32,11 +36,24 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
+    private final TradeService tradeService;
     private final TimeProvider timeProvider;
+    private final FeePolicy feePolicy;
 
     public OrderCreateResponse createLimitBuyOrder(LimitOrderServiceRequest request) {
+        User user = getUser();
         LocalDateTime registeredDateTime = timeProvider.now();
-        Order order = orderRepository.save(setLimitOrder(request, BUY, getUser(), registeredDateTime));
+        BigDecimal totalOrderPrice = request.getPrice().multiply(request.getQuantity());
+        BigDecimal orderFee = calculateOrderFee(totalOrderPrice);
+
+        if (user.getAvailableBalance().compareTo(totalOrderPrice.add(orderFee)) < 0) {
+            throw new NotEnoughBalanceException();
+        }
+
+        user.increaseLockedBalance(totalOrderPrice);
+        Order order = orderRepository.save(setLimitOrder(request, BUY, user, registeredDateTime));
+
+        tradeService.match(order);
 
         return OrderCreateResponse.of(order);
     }
@@ -97,6 +114,24 @@ public class OrderService {
                 .map(OpenOrderListResponse::of);
     }
 
+    public OrderAvailableResponse getAvailableAmount() {
+        User user = getUser();
+
+        return OrderAvailableResponse.of(user);
+    }
+
+    public Page<CompleteOrderListResponse> getCompleteOrders(Pageable pageable) {
+
+        return orderRepository.findByUserIdAndOrderStatus(getUser().getId(), FILLED, pageable)
+                .map(CompleteOrderListResponse::of);
+    }
+
+    public Page<OpenOrderListResponse> getOpenOrders(Pageable pageable) {
+
+        return orderRepository.findByUserIdAndOrderStatusIn(getUser().getId(), List.of(PARTIAL, OPEN), pageable)
+                .map(OpenOrderListResponse::of);
+    }
+
     private User getUser() {
         return userRepository.findById(UserContext.getUserId())
                 .orElseThrow(UserNotFoundException::new);
@@ -108,5 +143,11 @@ public class OrderService {
         BigDecimal quantity = request.getQuantity();
 
         return Order.createLimitOrder(symbol, price, quantity, orderSide, user, registeredDateTime);
+    }
+
+    private BigDecimal calculateOrderFee(BigDecimal totalPrice) {
+        BigDecimal feeRate = feePolicy.getTakerFeeRate();
+
+        return totalPrice.multiply(feeRate).setScale(8, RoundingMode.DOWN);
     }
 }
