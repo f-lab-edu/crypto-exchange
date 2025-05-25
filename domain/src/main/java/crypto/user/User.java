@@ -59,7 +59,6 @@ public class User extends BaseEntity {
     public void decreaseLockedBalance(BigDecimal price) {
         this.lockedBalance = this.lockedBalance.subtract(price);
         this.availableBalance = this.availableBalance.add(price);
-    }
 
     public void buyOrderSettlement(BigDecimal price) {
         this.lockedBalance = this.lockedBalance.subtract(price);
@@ -72,6 +71,4 @@ public class User extends BaseEntity {
     public void feeSettlement(BigDecimal price) {
         this.availableBalance = this.availableBalance.subtract(price);
     }
-
-
 }

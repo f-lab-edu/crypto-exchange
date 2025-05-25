@@ -114,6 +114,24 @@ public class OrderService {
                 .map(OpenOrderListResponse::of);
     }
 
+    public OrderAvailableResponse getAvailableAmount() {
+        User user = getUser();
+
+        return OrderAvailableResponse.of(user);
+    }
+
+    public Page<CompleteOrderListResponse> getCompleteOrders(Pageable pageable) {
+
+        return orderRepository.findByUserIdAndOrderStatus(getUser().getId(), FILLED, pageable)
+                .map(CompleteOrderListResponse::of);
+    }
+
+    public Page<OpenOrderListResponse> getOpenOrders(Pageable pageable) {
+
+        return orderRepository.findByUserIdAndOrderStatusIn(getUser().getId(), List.of(PARTIAL, OPEN), pageable)
+                .map(OpenOrderListResponse::of);
+    }
+
     private User getUser() {
         return userRepository.findById(UserContext.getUserId())
                 .orElseThrow(UserNotFoundException::new);
