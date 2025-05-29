@@ -2,6 +2,8 @@ package crypto.user;
 
 import crypto.BaseEntity;
 import crypto.order.Order;
+import crypto.user.exception.InsufficientAvailableBalanceException;
+import crypto.user.exception.LockedBalanceExceedException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -52,26 +54,23 @@ public class User extends BaseEntity {
     }
 
     public void increaseLockedBalance(BigDecimal price) {
+        if (this.availableBalance.compareTo(price) < 0) {
+            throw new InsufficientAvailableBalanceException();
+        }
+
         this.lockedBalance = this.lockedBalance.add(price);
         this.availableBalance = this.availableBalance.subtract(price);
     }
 
-    public void decreaseLockedBalance(BigDecimal price) {
-        this.lockedBalance = this.lockedBalance.subtract(price);
-        this.availableBalance = this.availableBalance.add(price);
-    }
-
     public void buyOrderSettlement(BigDecimal price) {
+        if (this.lockedBalance.compareTo(price) < 0) {
+            throw new LockedBalanceExceedException();
+        }
+
         this.lockedBalance = this.lockedBalance.subtract(price);
     }
 
     public void sellOrderSettlement(BigDecimal price) {
         this.availableBalance = this.availableBalance.add(price);
     }
-
-    public void feeSettlement(BigDecimal price) {
-        this.availableBalance = this.availableBalance.subtract(price);
-    }
-
-
 }

@@ -8,8 +8,7 @@ import lombok.RequiredArgsConstructor;
 public enum OrderStatus {
 
     FILLED("체결"),
-    OPEN("미체결"),
-    PARTIAL("일부 체결");
+    OPEN("미체결");
 
     private final String text;
 }

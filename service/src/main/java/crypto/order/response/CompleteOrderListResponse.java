@@ -32,7 +32,7 @@ public class CompleteOrderListResponse {
     public static CompleteOrderListResponse of(Order order) {
         return CompleteOrderListResponse.builder()
                 .orderId(order.getId())
-                .symbol(order.getSymbol())
+                .symbol(order.getCoin().getSymbol())
                 .orderSide(order.getOrderSide())
                 .price(order.getPrice())
                 .amount(order.getQuantity())
