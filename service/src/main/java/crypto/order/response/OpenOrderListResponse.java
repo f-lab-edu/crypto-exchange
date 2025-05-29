@@ -35,7 +35,7 @@ public class OpenOrderListResponse {
     public static OpenOrderListResponse of(Order order) {
         return OpenOrderListResponse.builder()
                 .orderId(order.getId())
-                .symbol(order.getSymbol())
+                .symbol(order.getCoin().getSymbol())
                 .orderSide(order.getOrderSide())
                 .price(order.getPrice())
                 .requestQty(order.getQuantity())

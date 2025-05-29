@@ -2,18 +2,21 @@ package crypto.trade;
 
 import crypto.order.OrderSide;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
+@Table(name = "trades")
 public class Trade {
 
-    @Id
-    @Column(name = "trade_id")
+    @Id @Column(name = "trade_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
