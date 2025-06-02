@@ -50,12 +50,17 @@ class TradeSettlementServiceTest {
         LocalDateTime registeredDateTime = LocalDateTime.of(2025, 5, 10, 15, 0);
         when(timeProvider.now()).thenReturn(registeredDateTime);
 
-        User buyer = userRepository.save(User.createUser("buyer@email.com", valueOf(1000)));
-        User seller = userRepository.save(User.createUser("seller@email.com", valueOf(1000)));
+        User buyer = userRepository.save(User.createUser("buyer@email.com"));
+        User seller = userRepository.save(User.createUser("seller@email.com"));
+        UserBalance buyerBalance = buyer.getUserBalance();
+        UserBalance sellerBalance = seller.getUserBalance();
+        buyerBalance.increaseAvailableBalance(valueOf(1000));
+        sellerBalance.increaseAvailableBalance(valueOf(1000));
+
         BigDecimal takerTotalUsed = valueOf(500);
         BigDecimal makerTotalUsed = valueOf(450);
         BigDecimal orderQuantity = valueOf(2);
-        buyer.increaseLockedBalance(takerTotalUsed);
+        buyerBalance.increaseLockedBalance(takerTotalUsed);
 
         Coin coin = coinRepository.save(Coin.create("BTC", "비트코인"));
         UserCoin buyerCoin = userCoinRepository.save(UserCoin.create(buyer, coin, valueOf(10)));
@@ -73,9 +78,9 @@ class TradeSettlementServiceTest {
         tradeSettlementService.buyOrderSettle(takerTotalUsed, makerTotalUsed, trade, buyOrder, sellOrder);
 
         // then
-        assertThat(buyer.getLockedBalance()).isEqualByComparingTo(valueOf(0));
-        assertThat(buyer.getAvailableBalance()).isEqualByComparingTo(valueOf(500));
-        assertThat(seller.getAvailableBalance()).isEqualByComparingTo(valueOf(1450));
+        assertThat(buyerBalance.getLockedBalance()).isEqualByComparingTo(valueOf(0));
+        assertThat(buyerBalance.getAvailableBalance()).isEqualByComparingTo(valueOf(500));
+        assertThat(sellerBalance.getAvailableBalance()).isEqualByComparingTo(valueOf(1450));
         assertThat(buyerCoin.getAvailableQuantity()).isEqualByComparingTo(valueOf(12));
         assertThat(sellerCoin.getLockedQuantity()).isEqualByComparingTo(valueOf(0));
         assertThat(sellerCoin.getAvailableQuantity()).isEqualByComparingTo(valueOf(3));
@@ -88,12 +93,17 @@ class TradeSettlementServiceTest {
         LocalDateTime registeredDateTime = LocalDateTime.of(2025, 5, 10, 15, 0);
         when(timeProvider.now()).thenReturn(registeredDateTime);
 
-        User seller = userRepository.save(User.createUser("seller@email.com", valueOf(1000)));
-        User buyer = userRepository.save(User.createUser("buyer@email.com", valueOf(1000)));
+        User seller = userRepository.save(User.createUser("seller@email.com"));
+        User buyer = userRepository.save(User.createUser("buyer@email.com"));
+        UserBalance buyerBalance = buyer.getUserBalance();
+        UserBalance sellerBalance = seller.getUserBalance();
+        buyerBalance.increaseAvailableBalance(valueOf(1000));
+        sellerBalance.increaseAvailableBalance(valueOf(1000));
+
         BigDecimal takerTotalUsed = valueOf(450);
         BigDecimal makerTotalUsed = valueOf(500);
         BigDecimal orderQuantity = valueOf(2);
-        buyer.increaseLockedBalance(makerTotalUsed);
+        buyerBalance.increaseLockedBalance(makerTotalUsed);
 
         Coin coin = coinRepository.save(Coin.create("BTC", "비트코인"));
         UserCoin sellerCoin = userCoinRepository.save(UserCoin.create(seller, coin, valueOf(10)));
@@ -111,9 +121,9 @@ class TradeSettlementServiceTest {
         tradeSettlementService.sellOrderSettle(takerTotalUsed, makerTotalUsed, trade, sellOrder, buyOrder);
 
         // then
-        assertThat(buyer.getLockedBalance()).isEqualByComparingTo(valueOf(0));
-        assertThat(buyer.getAvailableBalance()).isEqualByComparingTo(valueOf(500));
-        assertThat(seller.getAvailableBalance()).isEqualByComparingTo(valueOf(1450));
+        assertThat(buyerBalance.getLockedBalance()).isEqualByComparingTo(valueOf(0));
+        assertThat(buyerBalance.getAvailableBalance()).isEqualByComparingTo(valueOf(500));
+        assertThat(sellerBalance.getAvailableBalance()).isEqualByComparingTo(valueOf(1450));
         assertThat(buyerCoin.getAvailableQuantity()).isEqualByComparingTo(valueOf(7));
         assertThat(sellerCoin.getLockedQuantity()).isEqualByComparingTo(valueOf(0));
         assertThat(sellerCoin.getAvailableQuantity()).isEqualByComparingTo(valueOf(8));

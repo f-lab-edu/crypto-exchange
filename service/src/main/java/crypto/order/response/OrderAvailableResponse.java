@@ -23,7 +23,7 @@ public class OrderAvailableResponse {
     public static OrderAvailableResponse of(User user) {
         return OrderAvailableResponse.builder()
                 .currency("KRW")
-                .amount(user.getAvailableBalance())
+                .amount(user.getUserBalance().getAvailableBalance())
                 .build();
     }
 }

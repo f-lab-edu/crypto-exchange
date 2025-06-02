@@ -1,14 +1,10 @@
 package crypto.trade;
 
 import crypto.fee.FeePolicy;
-import crypto.order.Order;
-import crypto.order.OrderRepository;
-import crypto.order.OrderRole;
-import crypto.order.OrderSide;
+import crypto.order.*;
 import crypto.time.TimeProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -21,20 +17,19 @@ import static crypto.order.OrderSide.BUY;
 import static crypto.order.OrderSide.SELL;
 
 
-@Transactional
 @RequiredArgsConstructor
 @Service
 public class TradeService {
 
-    private final OrderRepository orderRepository;
-    private final TradeRepository tradeRepository;
+    private final OrderService orderService;
     private final TradeSettlementService tradeSettlementService;
+    private final TradeRepository tradeRepository;
     private final TimeProvider timeProvider;
     private final FeePolicy feePolicy;
 
     public void limitBuyOrderMatch(Order buyOrder) {
         LocalDateTime registeredDateTime = timeProvider.now();
-        List<Order> sellOrders = orderRepository.findMatchedLimitBuyOrders(buyOrder.getCoin(), SELL, buyOrder.getPrice());
+        List<Order> sellOrders = orderService.getMatchedLimitBuyOrders(buyOrder.getCoin(), SELL, buyOrder.getPrice());
 
         if (sellOrders.isEmpty()) {
             return;
@@ -56,7 +51,7 @@ public class TradeService {
 
     public void limitSellOrderMatch(Order sellOrder) {
         LocalDateTime registeredDateTime = timeProvider.now();
-        List<Order> buyOrders = orderRepository.findMatchedLimitSellOrders(sellOrder.getCoin(), BUY, sellOrder.getPrice());
+        List<Order> buyOrders = orderService.getMatchedLimitSellOrders(sellOrder.getCoin(), BUY, sellOrder.getPrice());
 
         if (buyOrders.isEmpty()) {
             return;
@@ -78,7 +73,7 @@ public class TradeService {
 
     public void marketBuyOrderMatch(Order buyOrder) {
         LocalDateTime registeredDateTime = timeProvider.now();
-        List<Order> sellOrders = orderRepository.findMatchedMarketBuyOrders(buyOrder.getCoin(), SELL);
+        List<Order> sellOrders = orderService.getMatchedMarketBuyOrders(buyOrder.getCoin(), SELL);
 
         BigDecimal remainPrice = buyOrder.getTotalPrice();
 
@@ -109,7 +104,7 @@ public class TradeService {
 
     public void marketSellOrderMatch(Order sellOrder) {
         LocalDateTime registeredDateTime = timeProvider.now();
-        List<Order> buyOrders = orderRepository.findMatchedMarketSellOrders(sellOrder.getCoin(), BUY);
+        List<Order> buyOrders = orderService.getMatchedMarketSellOrders(sellOrder.getCoin(), BUY);
 
         BigDecimal remainQty = sellOrder.getTotalAmount();
 

@@ -23,12 +23,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static crypto.order.OrderSide.*;
 import static crypto.order.OrderStatus.*;
 
 
-@Transactional
 @RequiredArgsConstructor
 @Service
 public class OrderService {
@@ -41,17 +41,19 @@ public class OrderService {
     private final TimeProvider timeProvider;
     private final FeePolicy feePolicy;
 
+    @Transactional
     public OrderCreateResponse createLimitBuyOrder(LimitOrderServiceRequest request) {
         User user = userService.getCurrentUser();
+        UserBalance userBalance = user.getUserBalance();
         LocalDateTime registeredDateTime = timeProvider.now();
         BigDecimal totalOrderPrice = request.getPrice().multiply(request.getQuantity());
         BigDecimal orderFee = calculateOrderFee(totalOrderPrice);
 
-        if (user.getAvailableBalance().compareTo(totalOrderPrice.add(orderFee)) < 0) {
+        if (userBalance.getAvailableBalance().compareTo(totalOrderPrice.add(orderFee)) < 0) {
             throw new NotEnoughBalanceException();
         }
 
-        user.increaseLockedBalance(totalOrderPrice.add(orderFee));
+        userBalance.increaseLockedBalance(totalOrderPrice.add(orderFee));
         Order order = orderRepository.save(buildLimitOrder(request, BUY, user, registeredDateTime));
 
         tradeService.limitBuyOrderMatch(order);
@@ -59,6 +61,7 @@ public class OrderService {
         return OrderCreateResponse.of(order);
     }
 
+    @Transactional
     public OrderCreateResponse createLimitSellOrder(LimitOrderServiceRequest request) {
         User user = userService.getCurrentUser();
         LocalDateTime registeredDateTime = timeProvider.now();
@@ -77,18 +80,20 @@ public class OrderService {
         return OrderCreateResponse.of(order);
     }
 
+    @Transactional
     public OrderCreateResponse createMarketBuyOrder(MarketBuyOrderServiceRequest request) {
         User user = userService.getCurrentUser();
+        UserBalance userBalance = user.getUserBalance();
         LocalDateTime registeredDateTime = timeProvider.now();
         BigDecimal totalPrice = request.getTotalPrice();
         Coin coin = coinService.getCoinOrThrow(request.getSymbol());
         BigDecimal orderFee = calculateOrderFee(totalPrice);
 
-        if (user.getAvailableBalance().compareTo(totalPrice.add(orderFee)) < 0) {
+        if (userBalance.getAvailableBalance().compareTo(totalPrice.add(orderFee)) < 0) {
             throw new NotEnoughBalanceException();
         }
 
-        user.increaseLockedBalance(totalPrice.add(orderFee));
+        userBalance.increaseLockedBalance(totalPrice.add(orderFee));
         Order order = orderRepository.save(Order.createMarketBuyOrder(totalPrice, coin, user, registeredDateTime));
 
         tradeService.marketBuyOrderMatch(order);
@@ -96,6 +101,7 @@ public class OrderService {
         return OrderCreateResponse.of(order);
     }
 
+    @Transactional
     public OrderCreateResponse createMarketSellOrder(MarketSellOrderServiceRequest request) {
         User user = userService.getCurrentUser();
         LocalDateTime registeredDateTime = timeProvider.now();
@@ -114,6 +120,7 @@ public class OrderService {
         return OrderCreateResponse.of(order);
     }
 
+    @Transactional
     public OrderDeleteResponse deleteOrder(Long orderId) {
         LocalDateTime deletedDateTime = timeProvider.now();
 
@@ -125,22 +132,41 @@ public class OrderService {
         return OrderDeleteResponse.of(order);
     }
 
+    @Transactional(readOnly = true)
     public OrderAvailableResponse getAvailableAmount() {
         User user = userService.getCurrentUser();
 
         return OrderAvailableResponse.of(user);
     }
 
+    @Transactional(readOnly = true)
     public Page<CompleteOrderListResponse> getCompleteOrders(Pageable pageable) {
 
         return orderRepository.findByUserIdAndOrderStatus(userService.getCurrentUser().getId(), FILLED, pageable)
                 .map(CompleteOrderListResponse::of);
     }
 
+    @Transactional(readOnly = true)
     public Page<OpenOrderListResponse> getOpenOrders(Pageable pageable) {
 
         return orderRepository.findByUserIdAndOrderStatus(userService.getCurrentUser().getId(), OPEN, pageable)
                 .map(OpenOrderListResponse::of);
+    }
+
+    public List<Order> getMatchedLimitBuyOrders(Coin coin, OrderSide orderSide, BigDecimal buyPrice) {
+        return orderRepository.findMatchedLimitBuyOrders(coin, orderSide, buyPrice);
+    }
+
+    public List<Order> getMatchedLimitSellOrders(Coin coin, OrderSide orderSide, BigDecimal sellPrice) {
+        return orderRepository.findMatchedLimitSellOrders(coin, orderSide, sellPrice);
+    }
+
+    public List<Order> getMatchedMarketBuyOrders(Coin coin, OrderSide orderSide) {
+        return orderRepository.findMatchedMarketBuyOrders(coin, orderSide);
+    }
+
+    public List<Order> getMatchedMarketSellOrders(Coin coin, OrderSide orderSide) {
+        return orderRepository.findMatchedMarketSellOrders(coin, orderSide);
     }
 
     private Order buildLimitOrder(LimitOrderServiceRequest request, OrderSide orderSide, User user, LocalDateTime registeredDateTime) {

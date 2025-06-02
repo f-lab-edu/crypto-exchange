@@ -2,6 +2,7 @@ package crypto.order;
 
 import crypto.BaseEntity;
 import crypto.coin.Coin;
+import crypto.order.exception.FilledQuantityExceedException;
 import crypto.user.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -26,8 +27,8 @@ public class Order extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private BigDecimal price;
-    private BigDecimal quantity;
+    private BigDecimal price = BigDecimal.ZERO;
+    private BigDecimal quantity = BigDecimal.ZERO;
     private BigDecimal filledQuantity = BigDecimal.ZERO;
     private BigDecimal totalPrice = BigDecimal.ZERO;
     private BigDecimal totalAmount = BigDecimal.ZERO;
@@ -118,7 +119,10 @@ public class Order extends BaseEntity {
     }
 
     public BigDecimal calculateRemainQuantity() {
+        if (getFilledQuantity().compareTo(getQuantity()) > 0) {
+            throw new FilledQuantityExceedException();
+        }
 
-        return (getQuantity().subtract(getFilledQuantity())).max(BigDecimal.ZERO);
+        return (getQuantity().subtract(getFilledQuantity()));
     }
 }
