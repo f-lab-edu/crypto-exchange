@@ -16,5 +16,15 @@ public class GlobalExceptionHandler {
                 null
         );
     }
+
+    @ExceptionHandler(DomainException.class)
+    public ApiResponse<Object> handleDomainException(DomainException e) {
+        return ApiResponse.of(
+                HttpStatus.BAD_REQUEST,
+                e.getMessage(),
+                null
+        );
+    }
+
 }
 

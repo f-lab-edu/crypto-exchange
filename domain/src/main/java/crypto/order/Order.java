@@ -1,6 +1,7 @@
 package crypto.order;
 
 import crypto.BaseEntity;
+import crypto.coin.Coin;
 import crypto.user.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -25,7 +26,6 @@ public class Order extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String symbol;
     private BigDecimal price;
     private BigDecimal quantity;
     private BigDecimal filledQuantity = BigDecimal.ZERO;
@@ -42,6 +42,10 @@ public class Order extends BaseEntity {
     private OrderStatus orderStatus = OPEN;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "coin_id")
+    private Coin coin;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
@@ -49,56 +53,56 @@ public class Order extends BaseEntity {
     private LocalDateTime deletedDateTime;
 
     @Builder
-    public Order(String symbol, BigDecimal price, BigDecimal quantity, BigDecimal totalPrice, BigDecimal totalAmount,
-                 OrderType orderType, OrderSide orderSide, User user, LocalDateTime registeredDateTime) {
-        this.symbol = symbol;
+    public Order(BigDecimal price, BigDecimal quantity, BigDecimal totalPrice, BigDecimal totalAmount,
+                 OrderType orderType, OrderSide orderSide, Coin coin, User user, LocalDateTime registeredDateTime) {
         this.price = price;
         this.quantity = quantity;
         this.totalPrice = totalPrice;
         this.totalAmount = totalAmount;
         this.orderType = orderType;
         this.orderSide = orderSide;
+        this.coin = coin;
         this.user = user;
         this.registeredDateTime = registeredDateTime;
     }
 
-    public static Order createLimitOrder(String symbol, BigDecimal price, BigDecimal quantity,
-                                         OrderSide orderSide, User user, LocalDateTime registeredDateTime) {
+    public static Order createLimitOrder(BigDecimal price, BigDecimal quantity,
+                                         OrderSide orderSide, Coin coin, User user, LocalDateTime registeredDateTime) {
         return Order.builder()
-                .symbol(symbol)
                 .price(price)
                 .quantity(quantity)
                 .orderType(LIMIT)
                 .orderSide(orderSide)
+                .coin(coin)
                 .user(user)
                 .registeredDateTime(registeredDateTime)
                 .build();
     }
 
-    public static Order createMarketBuyOrder(String symbol, BigDecimal totalPrice, User user, LocalDateTime registeredDateTime) {
+    public static Order createMarketBuyOrder(BigDecimal totalPrice, Coin coin, User user, LocalDateTime registeredDateTime) {
         return Order.builder()
-                .symbol(symbol)
                 .orderType(MARKET)
                 .orderSide(BUY)
                 .totalPrice(totalPrice)
+                .coin(coin)
                 .user(user)
                 .registeredDateTime(registeredDateTime)
                 .build();
     }
 
-    public static Order createMarketSellOrder(String symbol, BigDecimal totalAmount, User user, LocalDateTime registeredDateTime) {
+    public static Order createMarketSellOrder(BigDecimal totalAmount, Coin coin, User user, LocalDateTime registeredDateTime) {
         return Order.builder()
-                .symbol(symbol)
                 .orderType(MARKET)
                 .orderSide(SELL)
                 .totalAmount(totalAmount)
+                .coin(coin)
                 .user(user)
                 .registeredDateTime(registeredDateTime)
                 .build();
     }
 
     public void fill(BigDecimal filledQuantity) {
-        this.filledQuantity = filledQuantity;
+        this.filledQuantity = this.filledQuantity.add(filledQuantity);
     }
 
     public boolean isFullyFilled() {

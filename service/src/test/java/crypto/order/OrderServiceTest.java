@@ -1,5 +1,6 @@
 package crypto.order;
 
+import crypto.coin.Coin;
 import crypto.exception.BusinessException;
 import crypto.order.exception.OrderNotFoundException;
 import crypto.order.request.LimitOrderServiceRequest;
@@ -86,7 +87,8 @@ class OrderServiceTest {
         LocalDateTime deletedDateTime = LocalDateTime.of(2025, 5, 10, 15, 0);
         when(timeProvider.now()).thenReturn(deletedDateTime);
 
-        Order order = orderRepository.save(createOrder("BTC", valueOf(20000)));
+        Coin coin = Coin.create("XRP", "Ripple");
+        Order order = orderRepository.save(createOrder(coin, valueOf(20000)));
 
         // when
         orderService.deleteOrder(order.getId());
@@ -116,9 +118,9 @@ class OrderServiceTest {
                 .build();
     }
 
-    private Order createOrder(String symbol, BigDecimal price) {
+    private Order createOrder(Coin coin, BigDecimal price) {
         return Order.builder()
-                .symbol(symbol)
+                .coin(coin)
                 .price(price)
                 .build();
     }

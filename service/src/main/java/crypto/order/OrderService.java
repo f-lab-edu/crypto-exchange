@@ -1,7 +1,10 @@
 package crypto.order;
 
+import crypto.coin.Coin;
+import crypto.coin.CoinService;
 import crypto.fee.FeePolicy;
 import crypto.order.exception.NotEnoughBalanceException;
+import crypto.order.exception.NotEnoughQuantityException;
 import crypto.order.exception.OrderNotFoundException;
 import crypto.order.request.LimitOrderServiceRequest;
 import crypto.order.request.MarketBuyOrderServiceRequest;
@@ -9,9 +12,8 @@ import crypto.order.request.MarketSellOrderServiceRequest;
 import crypto.order.response.*;
 import crypto.time.TimeProvider;
 import crypto.trade.TradeService;
-import crypto.user.User;
+import crypto.user.*;
 
-import crypto.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.util.List;
 
 import static crypto.order.OrderSide.*;
 import static crypto.order.OrderStatus.*;
@@ -34,6 +35,8 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final UserService userService;
+    private final CoinService coinService;
+    private final UserCoinService userCoinService;
     private final TradeService tradeService;
     private final TimeProvider timeProvider;
     private final FeePolicy feePolicy;
@@ -48,37 +51,65 @@ public class OrderService {
             throw new NotEnoughBalanceException();
         }
 
-        user.increaseLockedBalance(totalOrderPrice);
+        user.increaseLockedBalance(totalOrderPrice.add(orderFee));
         Order order = orderRepository.save(buildLimitOrder(request, BUY, user, registeredDateTime));
 
-        tradeService.match(order);
+        tradeService.limitBuyOrderMatch(order);
 
         return OrderCreateResponse.of(order);
     }
 
     public OrderCreateResponse createLimitSellOrder(LimitOrderServiceRequest request) {
+        User user = userService.getCurrentUser();
         LocalDateTime registeredDateTime = timeProvider.now();
-        Order order = orderRepository.save(buildLimitOrder(request, SELL, userService.getCurrentUser(), registeredDateTime));
+        BigDecimal sellQuantity = request.getQuantity();
+        UserCoin userCoin = userCoinService.getUserCoinOrThrow(user, request.getSymbol());
+
+        if (userCoin.getAvailableQuantity().compareTo(sellQuantity) < 0) {
+            throw new NotEnoughQuantityException();
+        }
+
+        userCoin.increaseLockedQuantity(sellQuantity);
+        Order order = orderRepository.save(buildLimitOrder(request, SELL, user, registeredDateTime));
+
+        tradeService.limitSellOrderMatch(order);
 
         return OrderCreateResponse.of(order);
     }
 
     public OrderCreateResponse createMarketBuyOrder(MarketBuyOrderServiceRequest request) {
-        String symbol = request.getSymbol();
-        BigDecimal totalPrice = request.getTotalPrice();
+        User user = userService.getCurrentUser();
         LocalDateTime registeredDateTime = timeProvider.now();
+        BigDecimal totalPrice = request.getTotalPrice();
+        Coin coin = coinService.getCoinOrThrow(request.getSymbol());
+        BigDecimal orderFee = calculateOrderFee(totalPrice);
 
-        Order order = orderRepository.save(Order.createMarketBuyOrder(symbol, totalPrice, userService.getCurrentUser(), registeredDateTime));
+        if (user.getAvailableBalance().compareTo(totalPrice.add(orderFee)) < 0) {
+            throw new NotEnoughBalanceException();
+        }
+
+        user.increaseLockedBalance(totalPrice.add(orderFee));
+        Order order = orderRepository.save(Order.createMarketBuyOrder(totalPrice, coin, user, registeredDateTime));
+
+        tradeService.marketBuyOrderMatch(order);
 
         return OrderCreateResponse.of(order);
     }
 
     public OrderCreateResponse createMarketSellOrder(MarketSellOrderServiceRequest request) {
-        String symbol = request.getSymbol();
-        BigDecimal totalAmount = request.getTotalAmount();
+        User user = userService.getCurrentUser();
         LocalDateTime registeredDateTime = timeProvider.now();
+        BigDecimal totalAmount = request.getTotalAmount();
+        UserCoin userCoin = userCoinService.getUserCoinOrThrow(user, request.getSymbol());
 
-        Order order = orderRepository.save(Order.createMarketSellOrder(symbol, totalAmount, userService.getCurrentUser(), registeredDateTime));
+        if (userCoin.getAvailableQuantity().compareTo(totalAmount) < 0) {
+            throw new NotEnoughQuantityException();
+        }
+
+        userCoin.increaseLockedQuantity(totalAmount);
+        Order order = orderRepository.save(Order.createMarketSellOrder(totalAmount, userCoin.getCoin(), user, registeredDateTime));
+
+        tradeService.marketSellOrderMatch(order);
 
         return OrderCreateResponse.of(order);
     }
@@ -108,7 +139,7 @@ public class OrderService {
 
     public Page<OpenOrderListResponse> getOpenOrders(Pageable pageable) {
 
-        return orderRepository.findByUserIdAndOrderStatusIn(userService.getCurrentUser().getId(), List.of(PARTIAL, OPEN), pageable)
+        return orderRepository.findByUserIdAndOrderStatus(userService.getCurrentUser().getId(), OPEN, pageable)
                 .map(OpenOrderListResponse::of);
     }
 
@@ -117,7 +148,9 @@ public class OrderService {
         BigDecimal price = request.getPrice();
         BigDecimal quantity = request.getQuantity();
 
-        return Order.createLimitOrder(symbol, price, quantity, orderSide, user, registeredDateTime);
+        Coin coin = coinService.getCoinOrThrow(symbol);
+
+        return Order.createLimitOrder(price, quantity, orderSide, coin, user, registeredDateTime);
     }
 
     private BigDecimal calculateOrderFee(BigDecimal totalPrice) {
