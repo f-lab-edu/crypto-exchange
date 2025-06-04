@@ -20,6 +20,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         WHERE o.coin = :coin
           AND o.orderSide = :orderSide
           AND o.orderStatus = 'OPEN'
+          AND o.orderType = 'LIMIT'
           AND o.price <= :buyPrice
         ORDER BY o.price ASC, o.registeredDateTime ASC
     """)
@@ -30,6 +31,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         WHERE o.coin = :coin
           AND o.orderSide = :orderSide
           AND o.orderStatus = 'OPEN'
+          AND o.orderType = 'LIMIT'
           AND o.price >= :sellPrice
         ORDER BY o.price DESC, o.registeredDateTime ASC
     """)
@@ -40,6 +42,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         WHERE o.coin = :coin
           AND o.orderSide = :orderSide
           AND o.orderStatus = 'OPEN'
+          AND o.orderType = 'LIMIT'
         ORDER BY o.price ASC, o.registeredDateTime ASC
     """)
     List<Order> findMatchedMarketBuyOrders(@Param("coin") Coin coin, @Param("orderSide") OrderSide orderSide);
@@ -49,6 +52,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         WHERE o.coin = :coin
           AND o.orderSide = :orderSide
           AND o.orderStatus = 'OPEN'
+          AND o.orderType = 'LIMIT'
         ORDER BY o.price DESC, o.registeredDateTime ASC
     """)
     List<Order> findMatchedMarketSellOrders(@Param("coin") Coin coin, @Param("orderSide") OrderSide orderSide);

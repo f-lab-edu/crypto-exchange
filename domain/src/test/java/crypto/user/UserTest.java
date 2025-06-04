@@ -72,7 +72,7 @@ class UserTest {
         userBalance.increaseLockedBalance(orderTotalPrice);
 
         // when
-        userBalance.buyOrderSettlement(orderTotalPrice);
+        userBalance.decreaseLockedBalance(orderTotalPrice);
 
         // then
         assertThat(userBalance.getLockedBalance()).isEqualByComparingTo(valueOf(0));
@@ -91,7 +91,7 @@ class UserTest {
         BigDecimal settlePrice = valueOf(600);
 
         // when // then
-        assertThatThrownBy(() -> userBalance.buyOrderSettlement(settlePrice))
+        assertThatThrownBy(() -> userBalance.decreaseLockedBalance(settlePrice))
                 .isInstanceOf(LockedBalanceExceedException.class)
                 .hasMessage("잠금처리된 잔액 보다 큰 금액입니다.");
     }
@@ -106,7 +106,7 @@ class UserTest {
         BigDecimal orderTotalPrice = valueOf(500);
 
         // when
-        userBalance.sellOrderSettlement(orderTotalPrice);
+        userBalance.increaseAvailableBalance(orderTotalPrice);
 
         // then
         assertThat(userBalance.getAvailableBalance()).isEqualByComparingTo(valueOf(1500));

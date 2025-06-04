@@ -47,13 +47,19 @@ public class TradeSettlementService {
         buyerCoin.increaseQuantity(trade.getQuantity());
     }
 
-    public void settleUser(BigDecimal takerTotalPrice, BigDecimal makerTotalPrice, User taker, User maker, OrderSide orderSide) {
+    public void refundUnmatchedLockedBalance(Order order, BigDecimal remainPrice) {
+        if (remainPrice.compareTo(BigDecimal.ZERO) > 0) {
+            order.getUser().getUserBalance().decreaseLockedBalance(remainPrice);
+        }
+    }
+
+    private void settleUser(BigDecimal takerTotalPrice, BigDecimal makerTotalPrice, User taker, User maker, OrderSide orderSide) {
         if (orderSide.equals(BUY)) {
-            taker.getUserBalance().buyOrderSettlement(takerTotalPrice);
-            maker.getUserBalance().sellOrderSettlement(makerTotalPrice);
+            taker.getUserBalance().decreaseLockedBalance(takerTotalPrice);
+            maker.getUserBalance().increaseAvailableBalance(makerTotalPrice);
         } else {
-            taker.getUserBalance().sellOrderSettlement(takerTotalPrice);
-            maker.getUserBalance().buyOrderSettlement(makerTotalPrice);
+            taker.getUserBalance().increaseAvailableBalance(takerTotalPrice);
+            maker.getUserBalance().decreaseLockedBalance(makerTotalPrice);
         }
     }
 }

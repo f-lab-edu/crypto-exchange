@@ -3,8 +3,7 @@ package crypto.order;
 import crypto.coin.Coin;
 import crypto.order.exception.FilledQuantityExceedException;
 import crypto.user.User;
-import crypto.user.UserBalance;
-import crypto.user.exception.InsufficientAvailableBalanceException;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.ActiveProfiles;

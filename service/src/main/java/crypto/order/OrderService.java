@@ -23,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.util.List;
 
 import static crypto.order.OrderSide.*;
 import static crypto.order.OrderStatus.*;
@@ -151,22 +150,6 @@ public class OrderService {
 
         return orderRepository.findByUserIdAndOrderStatus(userService.getCurrentUser().getId(), OPEN, pageable)
                 .map(OpenOrderListResponse::of);
-    }
-
-    public List<Order> getMatchedLimitBuyOrders(Coin coin, OrderSide orderSide, BigDecimal buyPrice) {
-        return orderRepository.findMatchedLimitBuyOrders(coin, orderSide, buyPrice);
-    }
-
-    public List<Order> getMatchedLimitSellOrders(Coin coin, OrderSide orderSide, BigDecimal sellPrice) {
-        return orderRepository.findMatchedLimitSellOrders(coin, orderSide, sellPrice);
-    }
-
-    public List<Order> getMatchedMarketBuyOrders(Coin coin, OrderSide orderSide) {
-        return orderRepository.findMatchedMarketBuyOrders(coin, orderSide);
-    }
-
-    public List<Order> getMatchedMarketSellOrders(Coin coin, OrderSide orderSide) {
-        return orderRepository.findMatchedMarketSellOrders(coin, orderSide);
     }
 
     private Order buildLimitOrder(LimitOrderServiceRequest request, OrderSide orderSide, User user, LocalDateTime registeredDateTime) {

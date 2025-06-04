@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import static crypto.order.OrderSide.*;
 import static crypto.order.OrderStatus.*;
 import static crypto.order.OrderType.*;
+import static java.math.BigDecimal.*;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -27,11 +28,11 @@ public class Order extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private BigDecimal price = BigDecimal.ZERO;
-    private BigDecimal quantity = BigDecimal.ZERO;
-    private BigDecimal filledQuantity = BigDecimal.ZERO;
-    private BigDecimal totalPrice = BigDecimal.ZERO;
-    private BigDecimal totalAmount = BigDecimal.ZERO;
+    private BigDecimal price = ZERO;
+    private BigDecimal quantity = ZERO;
+    private BigDecimal filledQuantity = ZERO;
+    private BigDecimal marKetTotalPrice = ZERO;
+    private BigDecimal marketTotalQuantity = ZERO;
 
     @Enumerated(EnumType.STRING)
     private OrderType orderType;
@@ -54,12 +55,12 @@ public class Order extends BaseEntity {
     private LocalDateTime deletedDateTime;
 
     @Builder
-    public Order(BigDecimal price, BigDecimal quantity, BigDecimal totalPrice, BigDecimal totalAmount,
+    public Order(BigDecimal price, BigDecimal quantity, BigDecimal totalPrice, BigDecimal totalQuantity,
                  OrderType orderType, OrderSide orderSide, Coin coin, User user, LocalDateTime registeredDateTime) {
         this.price = price;
         this.quantity = quantity;
-        this.totalPrice = totalPrice;
-        this.totalAmount = totalAmount;
+        this.marKetTotalPrice = totalPrice;
+        this.marketTotalQuantity = totalQuantity;
         this.orderType = orderType;
         this.orderSide = orderSide;
         this.coin = coin;
@@ -91,11 +92,11 @@ public class Order extends BaseEntity {
                 .build();
     }
 
-    public static Order createMarketSellOrder(BigDecimal totalAmount, Coin coin, User user, LocalDateTime registeredDateTime) {
+    public static Order createMarketSellOrder(BigDecimal totalQuantity, Coin coin, User user, LocalDateTime registeredDateTime) {
         return Order.builder()
                 .orderType(MARKET)
                 .orderSide(SELL)
-                .totalAmount(totalAmount)
+                .totalQuantity(totalQuantity)
                 .coin(coin)
                 .user(user)
                 .registeredDateTime(registeredDateTime)

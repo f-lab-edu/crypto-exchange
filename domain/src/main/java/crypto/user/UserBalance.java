@@ -48,15 +48,11 @@ public class UserBalance {
         this.availableBalance = this.availableBalance.subtract(price);
     }
 
-    public void buyOrderSettlement(BigDecimal price) {
+    public void decreaseLockedBalance(BigDecimal price) {
         if (this.lockedBalance.compareTo(price) < 0) {
             throw new LockedBalanceExceedException();
         }
 
         this.lockedBalance = this.lockedBalance.subtract(price);
-    }
-
-    public void sellOrderSettlement(BigDecimal price) {
-        this.availableBalance = this.availableBalance.add(price);
     }
 }

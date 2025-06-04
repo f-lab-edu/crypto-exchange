@@ -21,7 +21,7 @@ import static crypto.order.OrderSide.SELL;
 @Service
 public class TradeService {
 
-    private final OrderService orderService;
+    private final OrderQueryService orderQueryService;
     private final TradeSettlementService tradeSettlementService;
     private final TradeRepository tradeRepository;
     private final TimeProvider timeProvider;
@@ -29,7 +29,7 @@ public class TradeService {
 
     public void limitBuyOrderMatch(Order buyOrder) {
         LocalDateTime registeredDateTime = timeProvider.now();
-        List<Order> sellOrders = orderService.getMatchedLimitBuyOrders(buyOrder.getCoin(), SELL, buyOrder.getPrice());
+        List<Order> sellOrders = orderQueryService.getMatchedLimitBuyOrders(buyOrder.getCoin(), SELL, buyOrder.getPrice());
 
         if (sellOrders.isEmpty()) {
             return;
@@ -51,7 +51,7 @@ public class TradeService {
 
     public void limitSellOrderMatch(Order sellOrder) {
         LocalDateTime registeredDateTime = timeProvider.now();
-        List<Order> buyOrders = orderService.getMatchedLimitSellOrders(sellOrder.getCoin(), BUY, sellOrder.getPrice());
+        List<Order> buyOrders = orderQueryService.getMatchedLimitSellOrders(sellOrder.getCoin(), BUY, sellOrder.getPrice());
 
         if (buyOrders.isEmpty()) {
             return;
@@ -73,9 +73,9 @@ public class TradeService {
 
     public void marketBuyOrderMatch(Order buyOrder) {
         LocalDateTime registeredDateTime = timeProvider.now();
-        List<Order> sellOrders = orderService.getMatchedMarketBuyOrders(buyOrder.getCoin(), SELL);
+        List<Order> sellOrders = orderQueryService.getMatchedMarketBuyOrders(buyOrder.getCoin(), SELL);
 
-        BigDecimal remainPrice = buyOrder.getTotalPrice();
+        BigDecimal remainPrice = buyOrder.getMarKetTotalPrice();
 
         for (Order sellOrder : sellOrders) {
             BigDecimal sellPrice = sellOrder.getPrice();
@@ -96,17 +96,19 @@ public class TradeService {
             Trade trade = createAndSaveTrade(buyOrder, sellOrder, sellPrice, matchedQty, BUY, takerFee, makerFee, registeredDateTime);
             settleAndMarkOrders(buyOrder, sellOrder, matchedQty, takerTotalUsed, makerTotalUsed, trade, BUY);
             remainPrice = remainPrice.subtract(takerTotalUsed);
+        }
 
-            if (buyOrder.isFullyFilled()) break;
-
+        if (remainPrice.compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal totalPrice = remainPrice.add(calculateTradeFee(buyOrder.getMarKetTotalPrice(), TAKER));
+            tradeSettlementService.refundUnmatchedLockedBalance(buyOrder, totalPrice);
         }
     }
 
     public void marketSellOrderMatch(Order sellOrder) {
         LocalDateTime registeredDateTime = timeProvider.now();
-        List<Order> buyOrders = orderService.getMatchedMarketSellOrders(sellOrder.getCoin(), BUY);
+        List<Order> buyOrders = orderQueryService.getMatchedMarketSellOrders(sellOrder.getCoin(), BUY);
 
-        BigDecimal remainQty = sellOrder.getTotalAmount();
+        BigDecimal remainQty = sellOrder.getMarketTotalQuantity();
 
         for (Order buyOrder : buyOrders) {
             BigDecimal buyPrice = buyOrder.getPrice();
@@ -124,13 +126,11 @@ public class TradeService {
             Trade trade = createAndSaveTrade(sellOrder, buyOrder, buyPrice, matchedQty, SELL, takerFee, makerFee, registeredDateTime);
             remainQty = remainQty.subtract(matchedQty);
             settleAndMarkOrders(sellOrder, buyOrder, matchedQty, takerTotalUsed, makerTotalUsed, trade, SELL);
-
-            if (sellOrder.isFullyFilled()) break;
         }
     }
 
     private void processMatchLimitOrder(Order matchOrder, Order placeOrder, OrderSide orderSide, LocalDateTime registeredDateTime) {
-        BigDecimal matchOrderQuantity = matchOrder.getQuantity();
+        BigDecimal matchOrderQuantity = matchOrder.calculateRemainQuantity();
         BigDecimal placeOrderQuantity = placeOrder.calculateRemainQuantity();
 
         BigDecimal matchedQty = matchOrderQuantity.min(placeOrderQuantity);
@@ -176,7 +176,6 @@ public class TradeService {
             tradeSettlementService.sellOrderSettle(takerTotalUsed, makerTotalUsed, trade, matchOrder, placeOrder);
         }
 
-        if (matchOrder.isFullyFilled()) matchOrder.markCompleted();
         if (placeOrder.isFullyFilled()) placeOrder.markCompleted();
     }
 
