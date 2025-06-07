@@ -31,46 +31,30 @@ public class User extends BaseEntity {
     private String appPassword;
     private String phoneNumber;
 
-    private BigDecimal availableBalance = BigDecimal.ZERO;
-    private BigDecimal lockedBalance = BigDecimal.ZERO;
-
     private LocalDateTime registeredDateTime;
     private LocalDateTime deletedDateTime;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, optional = false)
+    private UserBalance userBalance;
 
     @OneToMany(mappedBy = "user")
     private List<Order> orders = new ArrayList<>();
 
     @Builder
-    public User(String email, BigDecimal availableBalance) {
+    public User(String email, UserBalance userBalance) {
         this.email = email;
-        this.availableBalance = availableBalance;
+        this.userBalance = userBalance;
     }
 
-    public static User createUser(String email, BigDecimal availableBalance) {
-        return User.builder()
+    public static User createUser(String email) {
+        UserBalance userBalance = new UserBalance("KRW");
+        User user = User.builder()
                 .email(email)
-                .availableBalance(availableBalance)
+                .userBalance(userBalance)
                 .build();
-    }
 
-    public void increaseLockedBalance(BigDecimal price) {
-        if (this.availableBalance.compareTo(price) < 0) {
-            throw new InsufficientAvailableBalanceException();
-        }
+        userBalance.setUser(user);
 
-        this.lockedBalance = this.lockedBalance.add(price);
-        this.availableBalance = this.availableBalance.subtract(price);
-    }
-
-    public void buyOrderSettlement(BigDecimal price) {
-        if (this.lockedBalance.compareTo(price) < 0) {
-            throw new LockedBalanceExceedException();
-        }
-
-        this.lockedBalance = this.lockedBalance.subtract(price);
-    }
-
-    public void sellOrderSettlement(BigDecimal price) {
-        this.availableBalance = this.availableBalance.add(price);
+        return user;
     }
 }

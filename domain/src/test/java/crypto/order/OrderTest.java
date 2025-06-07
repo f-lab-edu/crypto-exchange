@@ -1,7 +1,9 @@
 package crypto.order;
 
 import crypto.coin.Coin;
+import crypto.order.exception.FilledQuantityExceedException;
 import crypto.user.User;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.ActiveProfiles;
@@ -16,6 +18,7 @@ import static crypto.order.OrderType.LIMIT;
 import static crypto.order.OrderType.MARKET;
 import static java.math.BigDecimal.valueOf;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 
 @ActiveProfiles("test")
@@ -27,7 +30,7 @@ class OrderTest {
     void checkLimit() {
         // given
         LocalDateTime registeredDateTime = LocalDateTime.of(2025, 5, 10, 15, 0);
-        User user = User.createUser("test@email.com", valueOf(1000));
+        User user = User.createUser("test@email.com");
         Coin coin = Coin.create("XRP", "Ripple");
 
         // when
@@ -42,7 +45,7 @@ class OrderTest {
     void checkBuyMarket() {
         // given
         LocalDateTime registeredDateTime = LocalDateTime.of(2025, 5, 10, 15, 0);
-        User user = User.createUser("test@email.com", valueOf(1000));
+        User user = User.createUser("test@email.com");
         Coin coin = Coin.create("XRP", "Ripple");
 
         // when
@@ -57,7 +60,7 @@ class OrderTest {
     void checkSellMarket() {
         // given
         LocalDateTime registeredDateTime = LocalDateTime.of(2025, 5, 10, 15, 0);
-        User user = User.createUser("test@email.com", valueOf(1000));
+        User user = User.createUser("test@email.com");
         Coin coin = Coin.create("XRP", "Ripple");
 
         // when
@@ -72,7 +75,7 @@ class OrderTest {
     void checkBuy() {
         // given
         LocalDateTime registeredDateTime = LocalDateTime.of(2025, 5, 10, 15, 0);
-        User user = User.createUser("test@email.com", valueOf(1000));
+        User user = User.createUser("test@email.com");
         Coin coin = Coin.create("XRP", "Ripple");
 
         // when
@@ -87,7 +90,7 @@ class OrderTest {
     void checkSell() {
         // given
         LocalDateTime registeredDateTime = LocalDateTime.of(2025, 5, 10, 15, 0);
-        User user = User.createUser("test@email.com", valueOf(1000));
+        User user = User.createUser("test@email.com");
         Coin coin = Coin.create("XRP", "Ripple");
 
         // when
@@ -102,7 +105,7 @@ class OrderTest {
     void checkLimitDeletedDateTime() {
         // given
         LocalDateTime registeredDateTime = LocalDateTime.of(2025, 5, 10, 15, 0);
-        User user = User.createUser("test@email.com", valueOf(1000));
+        User user = User.createUser("test@email.com");
         Coin coin = Coin.create("XRP", "Ripple");
 
         // when
@@ -117,7 +120,7 @@ class OrderTest {
     void checkMarketBuyDeletedDateTime() {
         // given
         LocalDateTime registeredDateTime = LocalDateTime.of(2025, 5, 10, 15, 0);
-        User user = User.createUser("test@email.com", valueOf(1000));
+        User user = User.createUser("test@email.com");
         Coin coin = Coin.create("XRP", "Ripple");
 
         // when
@@ -132,7 +135,7 @@ class OrderTest {
     void checkMarketSellDeletedDateTime() {
         // given
         LocalDateTime registeredDateTime = LocalDateTime.of(2025, 5, 10, 15, 0);
-        User user = User.createUser("test@email.com", valueOf(1000));
+        User user = User.createUser("test@email.com");
         Coin coin = Coin.create("XRP", "Ripple");
 
         // when
@@ -147,7 +150,7 @@ class OrderTest {
     void checkFilledQuantity() {
         // given
         LocalDateTime registeredDateTime = LocalDateTime.of(2025, 5, 10, 15, 0);
-        User user = User.createUser("test@email.com", valueOf(1000));
+        User user = User.createUser("test@email.com");
         Coin coin = Coin.create("XRP", "Ripple");
         Order order = Order.createLimitOrder(valueOf(100), valueOf(10), BUY, coin, user, registeredDateTime);
 
@@ -163,7 +166,7 @@ class OrderTest {
     void checkFullyFilledTrue() {
         // given
         LocalDateTime registeredDateTime = LocalDateTime.of(2025, 5, 10, 15, 0);
-        User user = User.createUser("test@email.com", valueOf(1000));
+        User user = User.createUser("test@email.com");
         Coin coin = Coin.create("XRP", "Ripple");
         Order order = Order.createLimitOrder(valueOf(100), valueOf(10), BUY, coin, user, registeredDateTime);
 
@@ -179,7 +182,7 @@ class OrderTest {
     void checkFullyFilledFalse() {
         // given
         LocalDateTime registeredDateTime = LocalDateTime.of(2025, 5, 10, 15, 0);
-        User user = User.createUser("test@email.com", valueOf(1000));
+        User user = User.createUser("test@email.com");
         Coin coin = Coin.create("XRP", "Ripple");
         Order order = Order.createLimitOrder(valueOf(100), valueOf(10), BUY, coin, user, registeredDateTime);
 
@@ -195,7 +198,7 @@ class OrderTest {
     void checkDeletedDateTime() {
         // given
         LocalDateTime registeredDateTime = LocalDateTime.of(2025, 5, 10, 15, 0);
-        User user = User.createUser("test@email.com", valueOf(1000));
+        User user = User.createUser("test@email.com");
         Coin coin = Coin.create("XRP", "Ripple");
         Order order = Order.createMarketBuyOrder(valueOf(100), coin, user, registeredDateTime);
 
@@ -211,7 +214,7 @@ class OrderTest {
     void checkRemainQuantity() {
         // given
         LocalDateTime registeredDateTime = LocalDateTime.of(2025, 5, 10, 15, 0);
-        User user = User.createUser("test@email.com", valueOf(1000));
+        User user = User.createUser("test@email.com");
         Coin coin = Coin.create("XRP", "Ripple");
         Order order = Order.createLimitOrder(valueOf(100), valueOf(10), BUY, coin, user, registeredDateTime);
 
@@ -224,21 +227,20 @@ class OrderTest {
         assertThat(remainQuantity).isEqualByComparingTo(valueOf(1));
     }
 
-    @DisplayName("미체결 주문 조회시 남은 주문 수량이 음수가 되는 경우 0을 반환한다.")
+    @DisplayName("미체결 주문 조회시 남은 주문 수량이 음수가 되는 경우 예외가 발생한다.")
     @Test
     void checkRemainQuantityNegative() {
         // given
         LocalDateTime registeredDateTime = LocalDateTime.of(2025, 5, 10, 15, 0);
-        User user = User.createUser("test@email.com", valueOf(1000));
+        User user = User.createUser("test@email.com");
         Coin coin = Coin.create("XRP", "Ripple");
         Order order = Order.createLimitOrder(valueOf(100), valueOf(10), BUY, coin, user, registeredDateTime);
 
         order.fill(valueOf(11));
 
-        // when
-        BigDecimal remainQuantity = order.calculateRemainQuantity();
-
-        // then
-        assertThat(remainQuantity).isEqualByComparingTo(valueOf(0));
+        // when // then
+        assertThatThrownBy(order::calculateRemainQuantity)
+                .isInstanceOf(FilledQuantityExceedException.class)
+                .hasMessage("체결 수량이 전체 주문 수량을 초과했습니다.");
     }
 }

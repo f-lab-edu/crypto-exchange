@@ -2,6 +2,7 @@ package crypto.order;
 
 import crypto.BaseEntity;
 import crypto.coin.Coin;
+import crypto.order.exception.FilledQuantityExceedException;
 import crypto.user.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 import static crypto.order.OrderSide.*;
 import static crypto.order.OrderStatus.*;
 import static crypto.order.OrderType.*;
+import static java.math.BigDecimal.*;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -26,11 +28,11 @@ public class Order extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private BigDecimal price;
-    private BigDecimal quantity;
-    private BigDecimal filledQuantity = BigDecimal.ZERO;
-    private BigDecimal totalPrice = BigDecimal.ZERO;
-    private BigDecimal totalAmount = BigDecimal.ZERO;
+    private BigDecimal price = ZERO;
+    private BigDecimal quantity = ZERO;
+    private BigDecimal filledQuantity = ZERO;
+    private BigDecimal marKetTotalPrice = ZERO;
+    private BigDecimal marketTotalQuantity = ZERO;
 
     @Enumerated(EnumType.STRING)
     private OrderType orderType;
@@ -53,12 +55,12 @@ public class Order extends BaseEntity {
     private LocalDateTime deletedDateTime;
 
     @Builder
-    public Order(BigDecimal price, BigDecimal quantity, BigDecimal totalPrice, BigDecimal totalAmount,
+    public Order(BigDecimal price, BigDecimal quantity, BigDecimal totalPrice, BigDecimal totalQuantity,
                  OrderType orderType, OrderSide orderSide, Coin coin, User user, LocalDateTime registeredDateTime) {
         this.price = price;
         this.quantity = quantity;
-        this.totalPrice = totalPrice;
-        this.totalAmount = totalAmount;
+        this.marKetTotalPrice = totalPrice;
+        this.marketTotalQuantity = totalQuantity;
         this.orderType = orderType;
         this.orderSide = orderSide;
         this.coin = coin;
@@ -90,11 +92,11 @@ public class Order extends BaseEntity {
                 .build();
     }
 
-    public static Order createMarketSellOrder(BigDecimal totalAmount, Coin coin, User user, LocalDateTime registeredDateTime) {
+    public static Order createMarketSellOrder(BigDecimal totalQuantity, Coin coin, User user, LocalDateTime registeredDateTime) {
         return Order.builder()
                 .orderType(MARKET)
                 .orderSide(SELL)
-                .totalAmount(totalAmount)
+                .totalQuantity(totalQuantity)
                 .coin(coin)
                 .user(user)
                 .registeredDateTime(registeredDateTime)
@@ -118,7 +120,10 @@ public class Order extends BaseEntity {
     }
 
     public BigDecimal calculateRemainQuantity() {
+        if (getFilledQuantity().compareTo(getQuantity()) > 0) {
+            throw new FilledQuantityExceedException();
+        }
 
-        return (getQuantity().subtract(getFilledQuantity())).max(BigDecimal.ZERO);
+        return (getQuantity().subtract(getFilledQuantity()));
     }
 }

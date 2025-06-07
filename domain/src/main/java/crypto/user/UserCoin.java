@@ -36,14 +36,12 @@ public class UserCoin {
     public UserCoin(User user, Coin coin, BigDecimal quantity) {
         this.user = user;
         this.coin = coin;
-        this.availableQuantity = quantity;
     }
 
-    public static UserCoin create(User user, Coin coin, BigDecimal quantity) {
+    public static UserCoin create(User user, Coin coin) {
         return UserCoin.builder()
                 .user(user)
                 .coin(coin)
-                .quantity(quantity)
                 .build();
     }
 

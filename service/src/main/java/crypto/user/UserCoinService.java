@@ -1,5 +1,6 @@
 package crypto.user;
 
+import crypto.coin.Coin;
 import crypto.user.exception.UserCoinNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,8 +19,8 @@ public class UserCoinService {
                 .orElseThrow(UserCoinNotFoundException::new);
     }
 
-    public UserCoin getUserCoinOrElse(User user, String symbol) {
+    public UserCoin getUserCoinOrCreate(User user, String symbol, Coin coin) {
         return userCoinRepository.findByUserAndCoinSymbol(user, symbol)
-                .orElse(null);
+                .orElseGet(() -> userCoinRepository.save(UserCoin.create(user, coin)));
     }
 }
