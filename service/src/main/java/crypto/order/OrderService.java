@@ -2,6 +2,9 @@ package crypto.order;
 
 import crypto.coin.Coin;
 import crypto.coin.CoinService;
+import crypto.event.payload.LimitOrderCreateEventPayload;
+import crypto.event.payload.MarketBuyOrderCreateEventPayload;
+import crypto.event.payload.MarketSellOrderCreateEventPayload;
 import crypto.fee.FeePolicy;
 import crypto.order.exception.NotEnoughBalanceException;
 import crypto.order.exception.NotEnoughQuantityException;
@@ -10,6 +13,7 @@ import crypto.order.request.LimitOrderServiceRequest;
 import crypto.order.request.MarketBuyOrderServiceRequest;
 import crypto.order.request.MarketSellOrderServiceRequest;
 import crypto.order.response.*;
+import crypto.outboxmessagerelay.OutboxEventPublisher;
 import crypto.time.TimeProvider;
 import crypto.trade.TradeService;
 import crypto.user.*;
@@ -23,8 +27,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.util.List;
 
+import static crypto.event.EventType.*;
 import static crypto.order.OrderSide.*;
 import static crypto.order.OrderStatus.*;
 
@@ -40,6 +44,7 @@ public class OrderService {
     private final TradeService tradeService;
     private final TimeProvider timeProvider;
     private final FeePolicy feePolicy;
+    private final OutboxEventPublisher outboxEventPublisher;
 
     @Transactional
     public OrderCreateResponse createLimitBuyOrder(LimitOrderServiceRequest request) {
@@ -56,7 +61,17 @@ public class OrderService {
         userBalance.increaseLockedBalance(totalOrderPrice.add(orderFee));
         Order order = orderRepository.save(buildLimitOrder(request, BUY, user, registeredDateTime));
 
-        tradeService.limitBuyOrderMatch(order);
+        outboxEventPublisher.publish(
+                LIMIT_ORDER_CREATE,
+                LimitOrderCreateEventPayload.builder()
+                        .orderId(order.getId())
+                        .coinId(order.getCoin().getId())
+                        .price(order.getPrice())
+                        .build(),
+                order.getId()
+        );
+
+        // tradeService.limitBuyOrderMatch(order);
 
         return OrderCreateResponse.of(order);
     }
@@ -75,7 +90,17 @@ public class OrderService {
         userCoin.increaseLockedQuantity(sellQuantity);
         Order order = orderRepository.save(buildLimitOrder(request, SELL, user, registeredDateTime));
 
-        tradeService.limitSellOrderMatch(order);
+        outboxEventPublisher.publish(
+                LIMIT_ORDER_CREATE,
+                LimitOrderCreateEventPayload.builder()
+                        .orderId(order.getId())
+                        .coinId(order.getCoin().getId())
+                        .price(order.getPrice())
+                        .build(),
+                order.getId()
+        );
+
+        // tradeService.limitSellOrderMatch(order);
 
         return OrderCreateResponse.of(order);
     }
@@ -96,7 +121,17 @@ public class OrderService {
         userBalance.increaseLockedBalance(totalPrice.add(orderFee));
         Order order = orderRepository.save(Order.createMarketBuyOrder(totalPrice, coin, user, registeredDateTime));
 
-        tradeService.marketBuyOrderMatch(order);
+        outboxEventPublisher.publish(
+                MARKET_BUY_ORDER_CREATE,
+                MarketBuyOrderCreateEventPayload.builder()
+                        .orderId(order.getId())
+                        .coinId(order.getCoin().getId())
+                        .marketTotalPrice(order.getMarKetTotalPrice())
+                        .build(),
+                order.getId()
+        );
+
+        // tradeService.marketBuyOrderMatch(order);
 
         return OrderCreateResponse.of(order);
     }
@@ -115,7 +150,17 @@ public class OrderService {
         userCoin.increaseLockedQuantity(totalAmount);
         Order order = orderRepository.save(Order.createMarketSellOrder(totalAmount, userCoin.getCoin(), user, registeredDateTime));
 
-        tradeService.marketSellOrderMatch(order);
+        outboxEventPublisher.publish(
+                MARKET_SELL_ORDER_CREATE,
+                MarketSellOrderCreateEventPayload.builder()
+                        .orderId(order.getId())
+                        .coinId(order.getCoin().getId())
+                        .marketTotalQuantity(order.getMarketTotalQuantity())
+                        .build(),
+                order.getId()
+        );
+
+        // tradeService.marketSellOrderMatch(order);
 
         return OrderCreateResponse.of(order);
     }

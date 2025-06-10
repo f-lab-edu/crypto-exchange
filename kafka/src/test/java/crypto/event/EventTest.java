@@ -20,7 +20,7 @@ class EventTest {
                 .build();
 
         Event<EventPayload> event = Event.of(
-                1234L,
+                "1234",
                 LIMIT_ORDER_CREATE,
                 payload
         );

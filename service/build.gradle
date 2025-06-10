@@ -6,6 +6,7 @@ plugins {
 dependencies {
     implementation project(':domain')
     implementation project(':common')
+    implementation project(':kafka')
     implementation project(':infra-database')
 
     testImplementation project(":api")
