@@ -69,8 +69,7 @@ class OrderServiceTest {
 
         // when
         OrderCreateResponse orderResponse = orderService.createLimitBuyOrder(request);
-        Order order = orderRepository.findById(orderResponse.getOrderId())
-                .orElseThrow(OrderNotFoundException::new);
+        Order order = orderService.findOrder(orderResponse.getOrderId());
 
         // then
         assertThat(orderResponse.getOrderId()).isNotNull();

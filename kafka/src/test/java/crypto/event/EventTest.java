@@ -21,7 +21,7 @@ class EventTest {
 
         Event<EventPayload> event = Event.of(
                 "1234",
-                LIMIT_ORDER_CREATE,
+                LIMIT_BUY_ORDER_CREATE,
                 payload
         );
 

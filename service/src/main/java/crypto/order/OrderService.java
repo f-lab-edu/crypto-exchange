@@ -62,7 +62,7 @@ public class OrderService {
         Order order = orderRepository.save(buildLimitOrder(request, BUY, user, registeredDateTime));
 
         outboxEventPublisher.publish(
-                LIMIT_ORDER_CREATE,
+                LIMIT_BUY_ORDER_CREATE,
                 LimitOrderCreateEventPayload.builder()
                         .orderId(order.getId())
                         .coinId(order.getCoin().getId())
@@ -91,7 +91,7 @@ public class OrderService {
         Order order = orderRepository.save(buildLimitOrder(request, SELL, user, registeredDateTime));
 
         outboxEventPublisher.publish(
-                LIMIT_ORDER_CREATE,
+                LIMIT_SELL_ORDER_CREATE,
                 LimitOrderCreateEventPayload.builder()
                         .orderId(order.getId())
                         .coinId(order.getCoin().getId())
@@ -169,9 +169,7 @@ public class OrderService {
     public OrderDeleteResponse deleteOrder(Long orderId) {
         LocalDateTime deletedDateTime = timeProvider.now();
 
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(OrderNotFoundException::new);
-
+        Order order = findOrder(orderId);
         order.markDeleted(deletedDateTime);
 
         return OrderDeleteResponse.of(order);
@@ -196,6 +194,11 @@ public class OrderService {
 
         return orderRepository.findByUserIdAndOrderStatus(userService.getCurrentUser().getId(), OPEN, pageable)
                 .map(OpenOrderListResponse::of);
+    }
+
+    public Order findOrder(Long orderId) {
+        return orderRepository.findById(orderId)
+                .orElseThrow(OrderNotFoundException::new);
     }
 
     private Order buildLimitOrder(LimitOrderServiceRequest request, OrderSide orderSide, User user, LocalDateTime registeredDateTime) {
