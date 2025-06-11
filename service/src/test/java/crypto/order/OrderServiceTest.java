@@ -35,6 +35,8 @@ import static org.springframework.security.core.context.SecurityContextHolder.ge
 @Transactional
 @SpringBootTest(classes = crypto.AppApiApplication.class)
 class OrderServiceTest {
+    @Autowired
+    private OrderQueryService orderQueryService;
 
     @Autowired
     private OrderService orderService;
@@ -69,7 +71,7 @@ class OrderServiceTest {
 
         // when
         OrderCreateResponse orderResponse = orderService.createLimitBuyOrder(request);
-        Order order = orderService.findOrder(orderResponse.getOrderId());
+        Order order = orderQueryService.findOrder(orderResponse.getOrderId());
 
         // then
         assertThat(orderResponse.getOrderId()).isNotNull();

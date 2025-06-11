@@ -8,14 +8,12 @@ import crypto.event.payload.MarketSellOrderCreateEventPayload;
 import crypto.fee.FeePolicy;
 import crypto.order.exception.NotEnoughBalanceException;
 import crypto.order.exception.NotEnoughQuantityException;
-import crypto.order.exception.OrderNotFoundException;
 import crypto.order.request.LimitOrderServiceRequest;
 import crypto.order.request.MarketBuyOrderServiceRequest;
 import crypto.order.request.MarketSellOrderServiceRequest;
 import crypto.order.response.*;
 import crypto.outboxmessagerelay.OutboxEventPublisher;
 import crypto.time.TimeProvider;
-import crypto.trade.TradeService;
 import crypto.user.*;
 
 import lombok.RequiredArgsConstructor;
@@ -37,11 +35,11 @@ import static crypto.order.OrderStatus.*;
 @Service
 public class OrderService {
 
+    private final OrderQueryService orderQueryService;
     private final OrderRepository orderRepository;
     private final UserService userService;
     private final CoinService coinService;
     private final UserCoinService userCoinService;
-    private final TradeService tradeService;
     private final TimeProvider timeProvider;
     private final FeePolicy feePolicy;
     private final OutboxEventPublisher outboxEventPublisher;
@@ -169,7 +167,7 @@ public class OrderService {
     public OrderDeleteResponse deleteOrder(Long orderId) {
         LocalDateTime deletedDateTime = timeProvider.now();
 
-        Order order = findOrder(orderId);
+        Order order = orderQueryService.findOrder(orderId);
         order.markDeleted(deletedDateTime);
 
         return OrderDeleteResponse.of(order);
@@ -194,11 +192,6 @@ public class OrderService {
 
         return orderRepository.findByUserIdAndOrderStatus(userService.getCurrentUser().getId(), OPEN, pageable)
                 .map(OpenOrderListResponse::of);
-    }
-
-    public Order findOrder(Long orderId) {
-        return orderRepository.findById(orderId)
-                .orElseThrow(OrderNotFoundException::new);
     }
 
     private Order buildLimitOrder(LimitOrderServiceRequest request, OrderSide orderSide, User user, LocalDateTime registeredDateTime) {

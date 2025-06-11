@@ -5,10 +5,9 @@ import crypto.event.EventType;
 import crypto.event.payload.MarketSellOrderCreateEventPayload;
 import crypto.order.Order;
 import crypto.order.OrderQueryService;
-import crypto.order.OrderService;
 import crypto.time.TimeProvider;
 import crypto.trade.Trade;
-import crypto.trade.TradeService;
+import crypto.trade.TradeProcessor;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -26,8 +25,7 @@ import static crypto.order.OrderSide.SELL;
 @Component
 @RequiredArgsConstructor
 public class MarketSellOrderCreateEventHandler implements EventHandler<MarketSellOrderCreateEventPayload> {
-    private final TradeService tradeService;
-    private final OrderService orderService;
+    private final TradeProcessor tradeProcessor;
     private final OrderQueryService orderQueryService;
     private final TimeProvider timeProvider;
 
@@ -36,7 +34,7 @@ public class MarketSellOrderCreateEventHandler implements EventHandler<MarketSel
         LocalDateTime registeredDateTime = timeProvider.now();
         MarketSellOrderCreateEventPayload payload = event.getPayload();
 
-        Order sellOrder = orderService.findOrder(payload.getOrderId());
+        Order sellOrder = orderQueryService.findOrder(payload.getOrderId());
         List<Order> buyOrders = orderQueryService.getMatchedMarketBuyOrders(sellOrder.getCoin(), BUY);
 
         BigDecimal remainQty = sellOrder.getMarketTotalQuantity();
@@ -49,14 +47,14 @@ public class MarketSellOrderCreateEventHandler implements EventHandler<MarketSel
             if (matchedQty.compareTo(BigDecimal.ZERO) <= 0) break;
 
             BigDecimal matchedAmount = buyPrice.multiply(matchedQty);
-            BigDecimal takerFee = tradeService.calculateTradeFee(matchedAmount, TAKER);
-            BigDecimal makerFee = tradeService.calculateTradeFee(matchedAmount, MAKER);
+            BigDecimal takerFee = tradeProcessor.calculateTradeFee(matchedAmount, TAKER);
+            BigDecimal makerFee = tradeProcessor.calculateTradeFee(matchedAmount, MAKER);
             BigDecimal takerTotalUsed = matchedAmount.add(takerFee);
             BigDecimal makerTotalUsed = matchedAmount.add(makerFee);
 
-            Trade trade = tradeService.createAndSaveTrade(sellOrder, buyOrder, buyPrice, matchedQty, SELL, takerFee, makerFee, registeredDateTime);
+            Trade trade = tradeProcessor.createAndSaveTrade(sellOrder, buyOrder, buyPrice, matchedQty, SELL, takerFee, makerFee, registeredDateTime);
             remainQty = remainQty.subtract(matchedQty);
-            tradeService.settleAndMarkOrders(sellOrder, buyOrder, matchedQty, takerTotalUsed, makerTotalUsed, trade, SELL);
+            tradeProcessor.settleAndMarkOrders(sellOrder, buyOrder, matchedQty, takerTotalUsed, makerTotalUsed, trade, SELL);
         }
     }
 

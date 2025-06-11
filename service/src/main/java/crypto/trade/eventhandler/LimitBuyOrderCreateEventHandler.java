@@ -5,10 +5,9 @@ import crypto.event.EventType;
 import crypto.event.payload.LimitOrderCreateEventPayload;
 import crypto.order.Order;
 import crypto.order.OrderQueryService;
-import crypto.order.OrderService;
 import crypto.time.TimeProvider;
+import crypto.trade.TradeProcessor;
 
-import crypto.trade.TradeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -22,8 +21,7 @@ import static crypto.order.OrderSide.SELL;
 @Component
 @RequiredArgsConstructor
 public class LimitBuyOrderCreateEventHandler implements EventHandler<LimitOrderCreateEventPayload> {
-    private final TradeService tradeService;
-    private final OrderService orderService;
+    private final TradeProcessor tradeProcessor;
     private final OrderQueryService orderQueryService;
     private final TimeProvider timeProvider;
 
@@ -32,7 +30,7 @@ public class LimitBuyOrderCreateEventHandler implements EventHandler<LimitOrderC
         LocalDateTime registeredDateTime = timeProvider.now();
         LimitOrderCreateEventPayload payload = event.getPayload();
 
-        Order buyOrder = orderService.findOrder(payload.getOrderId());
+        Order buyOrder = orderQueryService.findOrder(payload.getOrderId());
         List<Order> sellOrders = orderQueryService.getMatchedLimitBuyOrders(buyOrder.getCoin(), SELL, buyOrder.getPrice());
 
         if (sellOrders.isEmpty()) {
@@ -40,7 +38,7 @@ public class LimitBuyOrderCreateEventHandler implements EventHandler<LimitOrderC
         }
 
         for (Order sellOrder : sellOrders) {
-            tradeService.processMatchLimitOrder(buyOrder, sellOrder, BUY, registeredDateTime);
+            tradeProcessor.processMatchLimitOrder(buyOrder, sellOrder, BUY, registeredDateTime);
 
             if (sellOrder.isFullyFilled()) {
                 sellOrder.markCompleted();
