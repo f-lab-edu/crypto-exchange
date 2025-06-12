@@ -18,10 +18,7 @@ import org.springframework.stereotype.Component;
 public class TradeEventConsumer {
     private final TradeService tradeService;
 
-    @KafkaListener(topics = {
-            EventType.Topic.CRYPTO_ORDER,
-            EventType.Topic.CRYPTO_TRADE
-    }, groupId = "crypto-order")
+    @KafkaListener(topics = EventType.Topic.CRYPTO_ORDER, groupId = "crypto-order")
     public void listen(String message, Acknowledgment ack) {
         log.info("[TradeEventConsumer.listen] received message={}", message);
         Event<EventPayload> event = Event.fromJson(message);

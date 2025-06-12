@@ -2,7 +2,6 @@ package crypto.order;
 
 import crypto.coin.Coin;
 import crypto.exception.BusinessException;
-import crypto.order.exception.OrderNotFoundException;
 import crypto.order.request.LimitOrderServiceRequest;
 import crypto.order.response.OrderCreateResponse;
 import crypto.time.TimeProvider;

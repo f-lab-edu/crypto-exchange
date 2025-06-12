@@ -4,7 +4,9 @@ import crypto.fee.FeePolicy;
 import crypto.order.Order;
 import crypto.order.OrderRole;
 import crypto.order.OrderSide;
+import crypto.order.exception.FilledQuantityExceedException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -16,6 +18,7 @@ import static crypto.order.OrderRole.TAKER;
 import static crypto.order.OrderSide.BUY;
 
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class TradeProcessor {
@@ -24,28 +27,36 @@ public class TradeProcessor {
     private final FeePolicy feePolicy;
 
     public void processMatchLimitOrder(Order matchOrder, Order placeOrder, OrderSide orderSide, LocalDateTime registeredDateTime) {
-        BigDecimal matchOrderQuantity = matchOrder.calculateRemainQuantity();
-        BigDecimal placeOrderQuantity = placeOrder.calculateRemainQuantity();
+        try {
+            BigDecimal matchOrderQuantity = matchOrder.calculateRemainQuantity();
+            BigDecimal placeOrderQuantity = placeOrder.calculateRemainQuantity();
 
-        BigDecimal matchedQty = matchOrderQuantity.min(placeOrderQuantity);
-        BigDecimal matchedPrice = placeOrder.getPrice();
-        BigDecimal totalPrice = matchedPrice.multiply(matchedQty);
+            BigDecimal matchedQty = matchOrderQuantity.min(placeOrderQuantity);
+            BigDecimal matchedPrice = placeOrder.getPrice();
+            BigDecimal totalPrice = matchedPrice.multiply(matchedQty);
 
-        BigDecimal takerFee = calculateTradeFee(totalPrice, TAKER);
-        BigDecimal makerFee = calculateTradeFee(totalPrice, MAKER);
+            BigDecimal takerFee = calculateTradeFee(totalPrice, TAKER);
+            BigDecimal makerFee = calculateTradeFee(totalPrice, MAKER);
 
-        BigDecimal takerTotalUsed = totalPrice.add(takerFee);
-        BigDecimal makerTotalUsed = totalPrice.add(makerFee);
+            BigDecimal takerTotalUsed = totalPrice.add(takerFee);
+            BigDecimal makerTotalUsed = totalPrice.add(makerFee);
 
-        matchOrder.fill(matchedQty);
-        placeOrder.fill(matchedQty);
+            matchOrder.fill(matchedQty);
+            placeOrder.fill(matchedQty);
 
-        Trade trade = createAndSaveTrade(matchOrder, placeOrder, matchedPrice, matchedQty, orderSide, takerFee, makerFee, registeredDateTime);
+            Trade trade = createAndSaveTrade(matchOrder, placeOrder, matchedPrice, matchedQty, orderSide, takerFee, makerFee, registeredDateTime);
 
-        if (orderSide.equals(BUY)) {
-            tradeSettlementService.buyOrderSettle(takerTotalUsed, makerTotalUsed, trade, matchOrder, placeOrder);
-        } else {
-            tradeSettlementService.sellOrderSettle(takerTotalUsed, makerTotalUsed, trade, matchOrder, placeOrder);
+            if (orderSide.equals(BUY)) {
+                tradeSettlementService.buyOrderSettle(takerTotalUsed, makerTotalUsed, trade, matchOrder, placeOrder);
+            } else {
+                tradeSettlementService.sellOrderSettle(takerTotalUsed, makerTotalUsed, trade, matchOrder, placeOrder);
+            }
+        } catch (FilledQuantityExceedException e) {
+            log.error("[TradeProcessor] Filled quantity exceeded. matchOrderId={}, placeOrderId={}",
+                    matchOrder.getId(), placeOrder.getId(), e);
+        } catch (Exception e) {
+            log.error("[TradeProcessor] Unexpected error during order match. matchOrderId={}, placeOrderId={}",
+                    matchOrder.getId(), placeOrder.getId(), e);
         }
     }
 
