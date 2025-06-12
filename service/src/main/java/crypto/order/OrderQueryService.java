@@ -1,6 +1,7 @@
 package crypto.order;
 
 import crypto.coin.Coin;
+import crypto.order.exception.OrderNotFoundException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -11,5 +12,6 @@ public interface OrderQueryService {
     List<Order> getMatchedLimitSellOrders(Coin coin, OrderSide orderSide, BigDecimal sellPrice);
     List<Order> getMatchedMarketBuyOrders(Coin coin, OrderSide orderSide);
     List<Order> getMatchedMarketSellOrders(Coin coin, OrderSide orderSide);
+    Order findOrder(Long orderId);
 }
 

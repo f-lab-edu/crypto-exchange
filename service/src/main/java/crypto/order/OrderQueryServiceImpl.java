@@ -1,6 +1,7 @@
 package crypto.order;
 
 import crypto.coin.Coin;
+import crypto.order.exception.OrderNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -27,5 +28,10 @@ public class OrderQueryServiceImpl implements OrderQueryService {
 
     public List<Order> getMatchedMarketSellOrders(Coin coin, OrderSide orderSide) {
         return orderRepository.findMatchedMarketSellOrders(coin, orderSide);
+    }
+
+    public Order findOrder(Long orderId) {
+        return orderRepository.findById(orderId)
+                .orElseThrow(OrderNotFoundException::new);
     }
 }
