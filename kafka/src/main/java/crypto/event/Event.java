@@ -1,16 +1,17 @@
 package crypto.event;
 
 import crypto.dataserializer.DataSerializer;
+import crypto.event.payload.UnifiedEventPayload;
 import lombok.Getter;
 
 @Getter
-public class Event<T extends EventPayload> {
+public class Event {
     private String eventId;
     private EventType type;
-    private T payload;
+    private UnifiedEventPayload payload;
 
-    public static Event<EventPayload> of(String eventId, EventType type, EventPayload payload) {
-        Event<EventPayload> event = new Event<>();
+    public static Event of(String eventId, EventType type, UnifiedEventPayload payload) {
+        Event event = new Event();
         event.eventId = eventId;
         event.type = type;
         event.payload = payload;
@@ -21,22 +22,7 @@ public class Event<T extends EventPayload> {
         return DataSerializer.serialize(this);
     }
 
-    public static Event<EventPayload> fromJson(String json) {
-        EventRaw eventRaw = DataSerializer.deserialize(json, EventRaw.class);
-        if (eventRaw == null) {
-            return null;
-        }
-        Event<EventPayload> event = new Event<>();
-        event.eventId = eventRaw.getEventId();
-        event.type = EventType.from(eventRaw.getType());
-        event.payload = DataSerializer.deserialize(eventRaw.getPayload(), event.type.getPayloadClass());
-        return event;
-    }
-
-    @Getter
-    private static class EventRaw {
-        private String eventId;
-        private String type;
-        private Object payload;
+    public static Event fromJson(String json) {
+        return DataSerializer.deserialize(json, Event.class);
     }
 }

@@ -1,7 +1,6 @@
 package crypto.trade.consumer;
 
 import crypto.event.Event;
-import crypto.event.EventPayload;
 import crypto.event.EventType;
 import crypto.trade.TradeService;
 
@@ -21,7 +20,7 @@ public class TradeEventConsumer {
     @KafkaListener(topics = EventType.Topic.CRYPTO_ORDER, groupId = "crypto-order")
     public void listen(String message, Acknowledgment ack) {
         log.info("[TradeEventConsumer.listen] received message={}", message);
-        Event<EventPayload> event = Event.fromJson(message);
+        Event event = Event.fromJson(message);
         if (event != null) {
             tradeService.handleEvent(event);
         }

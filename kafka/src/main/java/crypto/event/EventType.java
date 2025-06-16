@@ -10,14 +10,13 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public enum EventType {
 
-    LIMIT_BUY_ORDER_CREATE(LimitOrderCreateEventPayload.class, Topic.CRYPTO_ORDER),
-    LIMIT_SELL_ORDER_CREATE(LimitOrderCreateEventPayload.class, Topic.CRYPTO_ORDER),
-    MARKET_BUY_ORDER_CREATE(MarketBuyOrderCreateEventPayload.class, Topic.CRYPTO_ORDER),
-    MARKET_SELL_ORDER_CREATE(MarketSellOrderCreateEventPayload.class, Topic.CRYPTO_ORDER),
-    TRADE_BUY_ORDER_CREATE(TradeBuyOrderCreateEventPayload.class, Topic.CRYPTO_TRADE),
-    TRADE_SELL_ORDER_CREATE(TradeSellOrderCreateEventPayload .class, Topic.CRYPTO_TRADE);
+    LIMIT_BUY_ORDER_CREATE(Topic.CRYPTO_ORDER),
+    LIMIT_SELL_ORDER_CREATE(Topic.CRYPTO_ORDER),
+    MARKET_BUY_ORDER_CREATE(Topic.CRYPTO_ORDER),
+    MARKET_SELL_ORDER_CREATE(Topic.CRYPTO_ORDER),
+    TRADE_BUY_ORDER_CREATE(Topic.CRYPTO_TRADE),
+    TRADE_SELL_ORDER_CREATE(Topic.CRYPTO_TRADE);
 
-    private final Class<? extends EventPayload> payloadClass;
     private final String topic;
 
     public static EventType from(String type) {

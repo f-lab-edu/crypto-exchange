@@ -2,7 +2,7 @@ package crypto.trade.eventhandler;
 
 import crypto.event.Event;
 import crypto.event.EventType;
-import crypto.event.payload.LimitOrderCreateEventPayload;
+import crypto.event.payload.UnifiedEventPayload;
 import crypto.order.Order;
 import crypto.order.OrderQueryService;
 import crypto.time.TimeProvider;
@@ -19,15 +19,15 @@ import static crypto.order.OrderSide.SELL;
 
 @Component
 @RequiredArgsConstructor
-public class LimitSellOrderCreateEventHandler implements EventHandler<LimitOrderCreateEventPayload> {
+public class LimitSellOrderCreateEventHandler implements EventHandler {
     private final TradeProcessor tradeProcessor;
     private final OrderQueryService orderQueryService;
     private final TimeProvider timeProvider;
 
     @Override
-    public void handle(Event<LimitOrderCreateEventPayload> event) {
+    public void handle(Event event) {
         LocalDateTime registeredDateTime = timeProvider.now();
-        LimitOrderCreateEventPayload payload = event.getPayload();
+        UnifiedEventPayload payload = event.getPayload();
 
         Order sellOrder = orderQueryService.findOrder(payload.getOrderId());
         List<Order> buyOrders = orderQueryService.getMatchedLimitSellOrders(sellOrder.getCoin(), SELL, sellOrder.getPrice());
@@ -51,7 +51,7 @@ public class LimitSellOrderCreateEventHandler implements EventHandler<LimitOrder
     }
 
     @Override
-    public boolean supports(Event<LimitOrderCreateEventPayload> event) {
+    public boolean supports(Event event) {
         return EventType.LIMIT_SELL_ORDER_CREATE == event.getType();
     }
 }

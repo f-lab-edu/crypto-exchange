@@ -2,7 +2,7 @@ package crypto.trade.eventhandler;
 
 import crypto.event.Event;
 import crypto.event.EventType;
-import crypto.event.payload.MarketBuyOrderCreateEventPayload;
+import crypto.event.payload.UnifiedEventPayload;
 import crypto.order.Order;
 import crypto.order.OrderQueryService;
 import crypto.time.TimeProvider;
@@ -27,16 +27,16 @@ import static crypto.order.OrderSide.SELL;
 
 @Component
 @RequiredArgsConstructor
-public class MarketBuyOrderCreateEventHandler implements EventHandler<MarketBuyOrderCreateEventPayload> {
+public class MarketBuyOrderCreateEventHandler implements EventHandler {
     private final TradeProcessor tradeProcessor;
     private final OrderQueryService orderQueryService;
     private final TradeSettlementService tradeSettlementService;
     private final TimeProvider timeProvider;
 
     @Override
-    public void handle(Event<MarketBuyOrderCreateEventPayload> event) {
+    public void handle(Event event) {
         LocalDateTime registeredDateTime = timeProvider.now();
-        MarketBuyOrderCreateEventPayload payload = event.getPayload();
+        UnifiedEventPayload payload = event.getPayload();
 
         Order buyOrder = orderQueryService.findOrder(payload.getOrderId());
         List<Order> sellOrders = orderQueryService.getMatchedMarketBuyOrders(buyOrder.getCoin(), SELL);
@@ -72,7 +72,7 @@ public class MarketBuyOrderCreateEventHandler implements EventHandler<MarketBuyO
     }
 
     @Override
-    public boolean supports(Event<MarketBuyOrderCreateEventPayload> event) {
+    public boolean supports(Event event) {
         return EventType.MARKET_BUY_ORDER_CREATE == event.getType();
     }
 }

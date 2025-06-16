@@ -30,10 +30,6 @@ public class DataSerializer {
         }
     }
 
-    public static <T> T deserialize(Object data, Class<T> clazz) {
-        return objectMapper.convertValue(data, clazz);
-    }
-
     public static String serialize(Object object) {
         try {
             return objectMapper.writeValueAsString(object);
