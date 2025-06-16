@@ -2,7 +2,6 @@ package crypto.order;
 
 import crypto.coin.Coin;
 import crypto.exception.BusinessException;
-import crypto.order.exception.OrderNotFoundException;
 import crypto.order.request.LimitOrderServiceRequest;
 import crypto.order.response.OrderCreateResponse;
 import crypto.time.TimeProvider;
@@ -35,6 +34,8 @@ import static org.springframework.security.core.context.SecurityContextHolder.ge
 @Transactional
 @SpringBootTest(classes = crypto.AppApiApplication.class)
 class OrderServiceTest {
+    @Autowired
+    private OrderQueryService orderQueryService;
 
     @Autowired
     private OrderService orderService;
@@ -69,8 +70,7 @@ class OrderServiceTest {
 
         // when
         OrderCreateResponse orderResponse = orderService.createLimitBuyOrder(request);
-        Order order = orderRepository.findById(orderResponse.getOrderId())
-                .orElseThrow(OrderNotFoundException::new);
+        Order order = orderQueryService.findOrder(orderResponse.getOrderId());
 
         // then
         assertThat(orderResponse.getOrderId()).isNotNull();
