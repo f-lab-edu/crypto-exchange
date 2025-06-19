@@ -18,4 +18,6 @@ public class UnifiedEventPayload {
     private BigDecimal price;
     private BigDecimal marketTotalQuantity;
     private BigDecimal marketTotalPrice;
+    private String originalMessage;
+    private String failMessage;
 }

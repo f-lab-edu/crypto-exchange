@@ -59,7 +59,7 @@ public class MarketSellOrderCreateEventHandler implements EventHandler {
     }
 
     @Override
-    public boolean supports(Event event) {
-        return EventType.MARKET_SELL_ORDER_CREATE == event.getType();
+    public EventType getSupportedEventType() {
+        return EventType.MARKET_SELL_ORDER_CREATE;
     }
 }

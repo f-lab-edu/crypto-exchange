@@ -37,8 +37,8 @@ import static org.awaitility.Awaitility.await;
 @Transactional
 @ActiveProfiles("test")
 @SpringBootTest(classes = crypto.AppApiApplication.class)
-@EmbeddedKafka(partitions = 1, topics = {"crypto-order"})
-class MessageRelayTest {
+@EmbeddedKafka(partitions = 1, topics = {"crypto-limit-order"})
+class MessageRelaySuccessTest {
 
     @Autowired
     private OutboxEventPublisher outboxEventPublisher;
@@ -60,7 +60,7 @@ class MessageRelayTest {
 
         DefaultKafkaConsumerFactory<String, String> cf = new DefaultKafkaConsumerFactory<>(consumerProps);
         consumer = cf.createConsumer();
-        consumer.subscribe(Collections.singletonList("crypto-order"));
+        consumer.subscribe(Collections.singletonList("crypto-limit-order"));
         consumer.poll(Duration.ZERO);
     }
 
@@ -99,7 +99,7 @@ class MessageRelayTest {
                 .build();
 
         // when
-        outboxEventPublisher.publish(LIMIT_BUY_ORDER_CREATE, payload, 3L);
+        outboxEventPublisher.publish(LIMIT_BUY_ORDER_CREATE, payload, 6L);
 
         TestTransaction.flagForCommit();
         TestTransaction.end();
@@ -108,7 +108,6 @@ class MessageRelayTest {
         final ConsumerRecords<String, String>[] capturedRecords = new ConsumerRecords[1];
 
         await().atMost(10, TimeUnit.SECONDS)
-                .pollInterval(Duration.ofMillis(100))
                 .until(() -> {
                     ConsumerRecords<String, String> polledRecords = KafkaTestUtils.getRecords(consumer, Duration.ofMillis(1000), 1);
 
@@ -123,7 +122,7 @@ class MessageRelayTest {
         assertThat(capturedRecords[0].count()).isEqualTo(1);
 
         ConsumerRecord<String, String> receivedRecord = capturedRecords[0].iterator().next();
-        assertThat(receivedRecord.topic()).isEqualTo("crypto-order");
+        assertThat(receivedRecord.topic()).isEqualTo("crypto-limit-order");
         assertThat(receivedRecord.key()).isEqualTo(String.valueOf(0));
 
         Event event = DataSerializer.deserialize(receivedRecord.value(), Event.class);

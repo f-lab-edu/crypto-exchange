@@ -52,7 +52,7 @@ public class LimitBuyOrderCreateEventHandler implements EventHandler {
     }
 
     @Override
-    public boolean supports(Event event) {
-        return EventType.LIMIT_BUY_ORDER_CREATE == event.getType();
+    public EventType getSupportedEventType() {
+        return EventType.LIMIT_BUY_ORDER_CREATE;
     }
 }
