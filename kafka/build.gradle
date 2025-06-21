@@ -1,7 +1,8 @@
 plugins {
     id 'java-conventions'
-    id 'kafka-conventions'
+    id 'service-conventions'
 }
 
 dependencies {
+    testImplementation project(":api")
 }

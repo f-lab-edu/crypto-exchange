@@ -1,10 +1,15 @@
 package crypto.trade.eventhandler;
 
 import crypto.event.Event;
-import crypto.event.EventPayload;
+import crypto.event.EventType;
 
 
-public interface EventHandler<T extends EventPayload> {
-    void handle(Event<T> event);
-    boolean supports(Event<T> event);
+public interface EventHandler {
+    void handle(Event event);
+
+    EventType getSupportedEventType();
+
+    default boolean supports(Event event) {
+        return getSupportedEventType() == event.getType();
+    };
 }

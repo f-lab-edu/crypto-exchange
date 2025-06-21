@@ -1,29 +1,44 @@
 package crypto.trade;
 
 import crypto.event.Event;
-import crypto.event.EventPayload;
+import crypto.event.ProcessedEvent;
+import crypto.event.ProcessedEventRepository;
 import crypto.trade.eventhandler.EventHandler;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class TradeService {
     private final List<EventHandler> eventHandlers;
+    private final ProcessedEventRepository processedEventRepository;
 
-    public void handleEvent(Event<EventPayload> event) {
-        EventHandler<EventPayload> eventHandler = findEventHandler(event);
+    @Transactional
+    public void handleEvent(Event event) {
+        String eventId = event.getEventId();
+
+        if (processedEventRepository.existsById(Long.valueOf(eventId))) {
+            log.info("[TradeService.handleEvent] Already processed event. eventId={}", eventId);
+            return;
+        }
+
+        EventHandler eventHandler = findEventHandler(event);
         if (eventHandler == null) {
             return;
         }
         eventHandler.handle(event);
+
+        processedEventRepository.save(new ProcessedEvent(eventId));
     }
 
-    private EventHandler<EventPayload> findEventHandler(Event<EventPayload> event) {
+    private EventHandler findEventHandler(Event event) {
         return eventHandlers.stream()
                 .filter(eventHandler -> eventHandler.supports(event))
                 .findAny()

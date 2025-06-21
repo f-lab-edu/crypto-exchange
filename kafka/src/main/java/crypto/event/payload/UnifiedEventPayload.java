@@ -1,6 +1,5 @@
 package crypto.event.payload;
 
-import crypto.event.EventPayload;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,8 +12,12 @@ import java.math.BigDecimal;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class MarketSellOrderCreateEventPayload implements EventPayload {
+public class UnifiedEventPayload {
     private Long orderId;
     private Long coinId;
+    private BigDecimal price;
     private BigDecimal marketTotalQuantity;
+    private BigDecimal marketTotalPrice;
+    private String originalMessage;
+    private String failMessage;
 }

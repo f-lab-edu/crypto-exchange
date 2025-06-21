@@ -2,9 +2,7 @@ package crypto.order;
 
 import crypto.coin.Coin;
 import crypto.coin.CoinService;
-import crypto.event.payload.LimitOrderCreateEventPayload;
-import crypto.event.payload.MarketBuyOrderCreateEventPayload;
-import crypto.event.payload.MarketSellOrderCreateEventPayload;
+import crypto.event.payload.UnifiedEventPayload;
 import crypto.fee.FeePolicy;
 import crypto.order.exception.NotEnoughBalanceException;
 import crypto.order.exception.NotEnoughQuantityException;
@@ -61,15 +59,13 @@ public class OrderService {
 
         outboxEventPublisher.publish(
                 LIMIT_BUY_ORDER_CREATE,
-                LimitOrderCreateEventPayload.builder()
+                UnifiedEventPayload.builder()
                         .orderId(order.getId())
                         .coinId(order.getCoin().getId())
                         .price(order.getPrice())
                         .build(),
                 order.getId()
         );
-
-        // tradeService.limitBuyOrderMatch(order);
 
         return OrderCreateResponse.of(order);
     }
@@ -90,15 +86,13 @@ public class OrderService {
 
         outboxEventPublisher.publish(
                 LIMIT_SELL_ORDER_CREATE,
-                LimitOrderCreateEventPayload.builder()
+                UnifiedEventPayload.builder()
                         .orderId(order.getId())
                         .coinId(order.getCoin().getId())
                         .price(order.getPrice())
                         .build(),
                 order.getId()
         );
-
-        // tradeService.limitSellOrderMatch(order);
 
         return OrderCreateResponse.of(order);
     }
@@ -121,15 +115,13 @@ public class OrderService {
 
         outboxEventPublisher.publish(
                 MARKET_BUY_ORDER_CREATE,
-                MarketBuyOrderCreateEventPayload.builder()
+                UnifiedEventPayload.builder()
                         .orderId(order.getId())
                         .coinId(order.getCoin().getId())
                         .marketTotalPrice(order.getMarKetTotalPrice())
                         .build(),
                 order.getId()
         );
-
-        // tradeService.marketBuyOrderMatch(order);
 
         return OrderCreateResponse.of(order);
     }
@@ -150,15 +142,13 @@ public class OrderService {
 
         outboxEventPublisher.publish(
                 MARKET_SELL_ORDER_CREATE,
-                MarketSellOrderCreateEventPayload.builder()
+                UnifiedEventPayload.builder()
                         .orderId(order.getId())
                         .coinId(order.getCoin().getId())
                         .marketTotalQuantity(order.getMarketTotalQuantity())
                         .build(),
                 order.getId()
         );
-
-        // tradeService.marketSellOrderMatch(order);
 
         return OrderCreateResponse.of(order);
     }
