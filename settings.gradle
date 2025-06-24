@@ -1,5 +1,11 @@
 rootProject.name = 'crypto-exchange'
 
-include 'api', 'batch', 'common', 'domain', 'kafka', 'infra-database', 'service'
-
-includeBuild 'build-logic'
+include 'common'
+include 'service'
+include 'service:order'
+include 'service:settlement'
+include 'service:trade'
+include 'common:common'
+include 'common:data-serializer'
+include 'common:event'
+include 'common:outbox-message-relay'
