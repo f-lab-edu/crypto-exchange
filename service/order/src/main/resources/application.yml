@@ -4,7 +4,7 @@ spring:
     name: crypto-exchange-order
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3306/crypto_exchange
+    url: jdbc:mysql://127.0.0.1:3306/order
     username: root
     password: root
   jpa:
@@ -13,3 +13,8 @@ spring:
     show-sql: true
     hibernate:
       ddl-auto: none
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
