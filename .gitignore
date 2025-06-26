@@ -7,3 +7,8 @@ out/
 
 ### Mac OS ###
 .DS_Store
+
+### Redis Persistent Data ###
+redis_master_data/
+redis_slave1_data/
+redis_slave2_data/
