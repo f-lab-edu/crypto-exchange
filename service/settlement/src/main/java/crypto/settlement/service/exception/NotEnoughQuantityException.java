@@ -1,4 +1,4 @@
-package crypto.order.service.order.exception;
+package crypto.settlement.service.exception;
 
 import crypto.common.entity.exception.BusinessException;
 import org.springframework.http.HttpStatus;

@@ -3,8 +3,8 @@ package crypto.order.entity.order;
 import crypto.common.entity.BaseEntity;
 import crypto.order.entity.coin.Coin;
 import crypto.order.entity.order.exception.FilledQuantityExceedException;
-
 import crypto.order.entity.user.User;
+
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -17,7 +17,9 @@ import java.time.LocalDateTime;
 import static crypto.order.entity.order.OrderSide.*;
 import static crypto.order.entity.order.OrderStatus.*;
 import static crypto.order.entity.order.OrderType.*;
+
 import static java.math.BigDecimal.ZERO;
+
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

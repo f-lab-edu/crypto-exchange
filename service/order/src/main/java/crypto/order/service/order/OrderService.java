@@ -7,14 +7,12 @@ import crypto.order.entity.coin.Coin;
 import crypto.order.entity.order.Order;
 import crypto.order.entity.order.OrderSide;
 import crypto.order.entity.user.User;
-import crypto.order.entity.user.UserCoin;
 import crypto.order.repository.order.OrderRepository;
 import crypto.order.service.coin.CoinService;
-import crypto.order.service.order.exception.NotEnoughQuantityException;
+import crypto.order.service.order.exception.OrderNotFoundException;
 import crypto.order.service.order.request.LimitOrderServiceRequest;
 import crypto.order.service.order.request.MarketBuyOrderServiceRequest;
 import crypto.order.service.order.request.MarketSellOrderServiceRequest;
-import crypto.order.service.user.UserCoinService;
 import crypto.order.service.user.UserService;
 import crypto.outboxmessagerelay.OutboxEventPublisher;
 
@@ -37,11 +35,9 @@ import static crypto.order.entity.order.OrderStatus.*;
 @Service
 public class OrderService {
 
-    private final OrderQueryService orderQueryService;
     private final OrderRepository orderRepository;
     private final UserService userService;
     private final CoinService coinService;
-    private final UserCoinService userCoinService;
     private final TimeProvider timeProvider;
     private final OutboxEventPublisher outboxEventPublisher;
 
@@ -72,14 +68,7 @@ public class OrderService {
     public OrderCreateResponse createLimitSellOrder(LimitOrderServiceRequest request) {
         User user = userService.getCurrentUser();
         LocalDateTime registeredDateTime = timeProvider.now();
-        BigDecimal sellQuantity = request.getQuantity();
-        UserCoin userCoin = userCoinService.getUserCoinOrThrow(user, request.getSymbol());
 
-        if (userCoin.getAvailableQuantity().compareTo(sellQuantity) < 0) {
-            throw new NotEnoughQuantityException();
-        }
-
-        userCoin.increaseLockedQuantity(sellQuantity);
         Order order = orderRepository.save(buildLimitOrder(request, SELL, user, registeredDateTime));
 
         outboxEventPublisher.publish(
@@ -125,14 +114,9 @@ public class OrderService {
         User user = userService.getCurrentUser();
         LocalDateTime registeredDateTime = timeProvider.now();
         BigDecimal totalAmount = request.getTotalAmount();
-        UserCoin userCoin = userCoinService.getUserCoinOrThrow(user, request.getSymbol());
+        Coin coin = coinService.getCoinOrThrow(request.getSymbol());
 
-        if (userCoin.getAvailableQuantity().compareTo(totalAmount) < 0) {
-            throw new NotEnoughQuantityException();
-        }
-
-        userCoin.increaseLockedQuantity(totalAmount);
-        Order order = orderRepository.save(Order.createMarketSellOrder(totalAmount, userCoin.getCoin(), user, registeredDateTime));
+        Order order = orderRepository.save(Order.createMarketSellOrder(totalAmount, coin, user, registeredDateTime));
 
         outboxEventPublisher.publish(
                 MARKET_SELL_ORDER_CREATE,
@@ -151,7 +135,8 @@ public class OrderService {
     public OrderDeleteResponse deleteOrder(Long orderId) {
         LocalDateTime deletedDateTime = timeProvider.now();
 
-        Order order = orderQueryService.findOrder(orderId);
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(OrderNotFoundException::new);
         order.markDeleted(deletedDateTime);
 
         return OrderDeleteResponse.of(order);

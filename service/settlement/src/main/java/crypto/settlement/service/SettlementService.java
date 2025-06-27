@@ -4,14 +4,18 @@ import crypto.common.fee.FeePolicy;
 import crypto.common.security.context.UserContext;
 import crypto.event.Event;
 import crypto.settlement.controller.response.CheckBalanceResponse;
+import crypto.settlement.controller.response.CheckQuantityResponse;
 import crypto.settlement.entity.SettlementProcessedEvent;
 import crypto.settlement.entity.UserBalance;
+import crypto.settlement.entity.UserCoin;
 import crypto.settlement.eventhandler.EventHandler;
 import crypto.settlement.repository.SettlementProcessedEventDbRepository;
 import crypto.settlement.repository.SettlementProcessedEventRepository;
 import crypto.settlement.service.exception.NotEnoughBalanceException;
+import crypto.settlement.service.exception.NotEnoughQuantityException;
 import crypto.settlement.service.request.CheckBalanceServiceRequest;
 
+import crypto.settlement.service.request.CheckQuantityServiceRequest;
 import lombok.RequiredArgsConstructor;
 
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +33,7 @@ import java.util.List;
 public class SettlementService {
 
     private final UserBalanceService userBalanceService;
+    private final UserCoinService userCoinService;
     private final List<EventHandler> eventHandlers;
     private final SettlementProcessedEventRepository settlementProcessedEventRepository;
     private final SettlementProcessedEventDbRepository settlementProcessedEventDbRepository;
@@ -90,6 +95,22 @@ public class SettlementService {
 
         return CheckBalanceResponse.of(userId);
     }
+
+    @Transactional
+    public CheckQuantityResponse checkQuantity(CheckQuantityServiceRequest request) {
+        Long userId = UserContext.getUserId();
+        BigDecimal sellQuantity = request.getQuantity();
+        UserCoin userCoin = userCoinService.getUserCoinOrThrow(userId, request.getSymbol());
+
+        if (userCoin.getAvailableQuantity().compareTo(sellQuantity) < 0) {
+            throw new NotEnoughQuantityException();
+        }
+
+        userCoin.increaseLockedQuantity(sellQuantity);
+
+        return CheckQuantityResponse.of(userId);
+    }
+
 
     private EventHandler findEventHandler(Event event) {
         return eventHandlers.stream()

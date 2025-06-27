@@ -3,12 +3,16 @@ package crypto.order.controller;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import crypto.common.api.response.ApiResponse;
+import crypto.common.api.response.PageResponse;
 import crypto.common.security.config.SecurityConfig;
-import crypto.order.request.*;
-import crypto.order.response.*;
-import crypto.response.ApiResponse;
-import crypto.response.PageResponse;
-import crypto.trade.UserRepository;
+import crypto.order.controller.request.LimitOrderRequest;
+import crypto.order.controller.request.MarketBuyOrderRequest;
+import crypto.order.controller.request.MarketSellOrderRequest;
+import crypto.order.controller.response.*;
+import crypto.order.repository.order.OrderRepository;
+import crypto.order.repository.user.UserRepository;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,8 +24,8 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
 
-import static crypto.order.OrderSide.*;
-import static crypto.order.OrderStatus.*;
+import static org.assertj.core.api.Assertions.*;
+
 
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
