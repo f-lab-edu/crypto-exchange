@@ -1,0 +1,103 @@
+version: '3.8'
+
+networks:
+  redis_crypto_network:
+    driver: bridge
+
+services:
+  redis-master:
+    image: redis:7.4
+    container_name: redis-master
+    command: redis-server --appendonly yes --requirepass root
+    volumes:
+      - ./redis_master_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - redis_crypto_network
+    environment:
+      - REDIS_REPLICATION_MODE=master
+      - REDIS_PASSWORD=root
+
+  redis-slave-1:
+    image: redis:7.4
+    container_name: redis-slave-1
+    command: redis-server --appendonly yes --replicaof redis-master 6379 --masterauth root --requirepass root
+    volumes:
+      - ./redis_slave1_data:/data
+    ports:
+      - "6380:6379"
+    networks:
+      - redis_crypto_network
+    depends_on:
+      - redis-master
+
+  redis-slave-2:
+    image: redis:7.4
+    container_name: redis-slave-2
+    command: redis-server --appendonly yes --replicaof redis-master 6379 --masterauth root --requirepass root
+    volumes:
+      - ./redis_slave2_data:/data
+    ports:
+      - "6381:6379"
+    networks:
+      - redis_crypto_network
+    depends_on:
+      - redis-master
+
+  redis-sentinel-1:
+    image: bitnami/redis-sentinel:latest
+    container_name: redis-sentinel-1
+    environment:
+      - REDIS_MASTER_HOST=redis-master
+      - REDIS_MASTER_PORT=6379
+      - REDIS_MASTER_PASSWORD=root
+      - REDIS_SENTINEL_QUORUM=2
+      - REDIS_SENTINEL_DOWN_AFTER_MILLISECONDS=5000
+      - REDIS_SENTINEL_FAILOVER_TIMEOUT=10000
+    ports:
+      - "26379:26379"
+    networks:
+      - redis_crypto_network
+    depends_on:
+      - redis-master
+      - redis-slave-1
+      - redis-slave-2
+
+  redis-sentinel-2:
+    image: bitnami/redis-sentinel:latest
+    container_name: redis-sentinel-2
+    environment:
+      - REDIS_MASTER_HOST=redis-master
+      - REDIS_MASTER_PORT=6379
+      - REDIS_MASTER_PASSWORD=root
+      - REDIS_SENTINEL_QUORUM=2
+      - REDIS_SENTINEL_DOWN_AFTER_MILLISECONDS=5000
+      - REDIS_SENTINEL_FAILOVER_TIMEOUT=10000
+    ports:
+      - "26380:26379"
+    networks:
+      - redis_crypto_network
+    depends_on:
+      - redis-master
+      - redis-slave-1
+      - redis-slave-2
+
+  redis-sentinel-3:
+    image: bitnami/redis-sentinel:latest
+    container_name: redis-sentinel-3
+    environment:
+      - REDIS_MASTER_HOST=redis-master
+      - REDIS_MASTER_PORT=6379
+      - REDIS_MASTER_PASSWORD=root
+      - REDIS_SENTINEL_QUORUM=2
+      - REDIS_SENTINEL_DOWN_AFTER_MILLISECONDS=5000
+      - REDIS_SENTINEL_FAILOVER_TIMEOUT=10000
+    ports:
+      - "26381:26379"
+    networks:
+      - redis_crypto_network
+    depends_on:
+      - redis-master
+      - redis-slave-1
+      - redis-slave-2
