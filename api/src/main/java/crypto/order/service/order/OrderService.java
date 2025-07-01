@@ -1,6 +1,7 @@
 package crypto.order.service.order;
 
 import crypto.common.time.TimeProvider;
+import crypto.event.EventSender;
 import crypto.event.payload.EventPayload;
 import crypto.order.controller.response.*;
 import crypto.order.entity.coin.Coin;
@@ -8,13 +9,11 @@ import crypto.order.entity.order.Order;
 import crypto.order.entity.order.OrderSide;
 import crypto.order.entity.user.User;
 import crypto.order.repository.order.OrderRepository;
-import crypto.order.service.coin.CoinService;
 import crypto.order.service.order.exception.OrderNotFoundException;
 import crypto.order.service.order.request.LimitOrderServiceRequest;
 import crypto.order.service.order.request.MarketBuyOrderServiceRequest;
 import crypto.order.service.order.request.MarketSellOrderServiceRequest;
 import crypto.order.service.user.UserService;
-import crypto.outboxmessagerelay.OutboxEventPublisher;
 
 import lombok.RequiredArgsConstructor;
 
@@ -37,98 +36,77 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final UserService userService;
-    private final CoinService coinService;
     private final TimeProvider timeProvider;
-    private final OutboxEventPublisher outboxEventPublisher;
+    private final EventSender eventSender;
 
     @Transactional
     public OrderCreateResponse createLimitBuyOrder(LimitOrderServiceRequest request) {
         User user = userService.getCurrentUser();
-        LocalDateTime registeredDateTime = timeProvider.now();
+        LocalDateTime createdAt = timeProvider.now();
 
-        Order order = orderRepository.save(buildLimitOrder(request, BUY, user, registeredDateTime));
-
-        outboxEventPublisher.publish(
+        eventSender.publish(
                 LIMIT_BUY_ORDER_CREATE,
                 EventPayload.builder()
-                        .orderId(order.getId())
-                        .userId(order.getUser().getId())
-                        .symbol(order.getCoin().getSymbol())
-                        .price(order.getPrice())
-                        .quantity(order.getQuantity())
-                        .orderSide(order.getOrderSide().name())
-                        .build(),
-                order.getId()
+                        .userId(user.getId())
+                        .symbol(request.getSymbol())
+                        .price(request.getPrice())
+                        .quantity(request.getQuantity())
+                        .orderSide(BUY.name())
+                        .build()
         );
 
-        return OrderCreateResponse.of(order);
+        return OrderCreateResponse.of(createdAt);
     }
 
     @Transactional
     public OrderCreateResponse createLimitSellOrder(LimitOrderServiceRequest request) {
         User user = userService.getCurrentUser();
-        LocalDateTime registeredDateTime = timeProvider.now();
+        LocalDateTime createdAt = timeProvider.now();
 
-        Order order = orderRepository.save(buildLimitOrder(request, SELL, user, registeredDateTime));
-
-        outboxEventPublisher.publish(
+        eventSender.publish(
                 LIMIT_SELL_ORDER_CREATE,
                 EventPayload.builder()
-                        .orderId(order.getId())
-                        .userId(order.getUser().getId())
-                        .symbol(order.getCoin().getSymbol())
-                        .price(order.getPrice())
-                        .quantity(order.getQuantity())
-                        .orderSide(order.getOrderSide().name())
-                        .build(),
-                order.getId()
+                        .userId(user.getId())
+                        .symbol(request.getSymbol())
+                        .price(request.getPrice())
+                        .quantity(request.getQuantity())
+                        .orderSide(SELL.name())
+                        .build()
         );
 
-        return OrderCreateResponse.of(order);
+        return OrderCreateResponse.of(createdAt);
     }
 
     @Transactional
     public OrderCreateResponse createMarketBuyOrder(MarketBuyOrderServiceRequest request) {
         User user = userService.getCurrentUser();
-        LocalDateTime registeredDateTime = timeProvider.now();
-        BigDecimal totalPrice = request.getTotalPrice();
-        Coin coin = coinService.getCoinOrThrow(request.getSymbol());
+        LocalDateTime createdAt = timeProvider.now();
 
-        Order order = orderRepository.save(Order.createMarketBuyOrder(totalPrice, coin, user, registeredDateTime));
-
-        outboxEventPublisher.publish(
+        eventSender.publish(
                 MARKET_BUY_ORDER_CREATE,
                 EventPayload.builder()
-                        .orderId(order.getId())
-                        .symbol(order.getCoin().getSymbol())
-                        .marketTotalPrice(order.getMarKetTotalPrice())
-                        .build(),
-                order.getId()
+                        .symbol(request.getSymbol())
+                        .marketTotalPrice(request.getTotalPrice())
+                        .build()
         );
 
-        return OrderCreateResponse.of(order);
+        return OrderCreateResponse.of(createdAt);
     }
 
     @Transactional
     public OrderCreateResponse createMarketSellOrder(MarketSellOrderServiceRequest request) {
         User user = userService.getCurrentUser();
-        LocalDateTime registeredDateTime = timeProvider.now();
-        BigDecimal totalAmount = request.getTotalAmount();
-        Coin coin = coinService.getCoinOrThrow(request.getSymbol());
+        LocalDateTime createdAt = timeProvider.now();
 
-        Order order = orderRepository.save(Order.createMarketSellOrder(totalAmount, coin, user, registeredDateTime));
-
-        outboxEventPublisher.publish(
+        eventSender.publish(
                 MARKET_SELL_ORDER_CREATE,
                 EventPayload.builder()
-                        .orderId(order.getId())
-                        .symbol(order.getCoin().getSymbol())
-                        .marketTotalQuantity(order.getMarketTotalQuantity())
-                        .build(),
-                order.getId()
+                        .symbol(request.getSymbol())
+                        .marketTotalQuantity(request.getTotalAmount())
+                        .build()
         );
 
-        return OrderCreateResponse.of(order);
+        return OrderCreateResponse.of(createdAt);
     }
 
     @Transactional

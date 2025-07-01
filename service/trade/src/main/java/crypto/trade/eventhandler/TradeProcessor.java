@@ -2,7 +2,6 @@ package crypto.trade.eventhandler;
 
 import crypto.common.fee.FeePolicy;
 import crypto.event.payload.EventPayload;
-import crypto.outboxmessagerelay.OutboxEventPublisher;
 import crypto.trade.entity.Trade;
 import crypto.trade.entity.TradeOrder;
 import crypto.trade.entity.TradeOrderRole;
@@ -28,7 +27,7 @@ import static crypto.trade.entity.TradeOrderSide.*;
 @Component
 @RequiredArgsConstructor
 public class TradeProcessor {
-    private final OutboxEventPublisher outboxEventPublisher;
+    // private final EventSender outboxEventPublisher;
     private final TradeRepository tradeRepository;
     private final FeePolicy feePolicy;
 

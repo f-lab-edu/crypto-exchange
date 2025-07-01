@@ -1,6 +1,8 @@
 rootProject.name = 'crypto-exchange'
 
 include 'common'
+include 'api'
+include 'api:order'
 include 'service'
 include 'service:order'
 include 'service:settlement'

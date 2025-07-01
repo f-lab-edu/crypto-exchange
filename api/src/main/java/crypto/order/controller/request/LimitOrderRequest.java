@@ -1,7 +1,6 @@
 package crypto.order.controller.request;
 
 import crypto.order.service.order.request.LimitOrderServiceRequest;
-
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
