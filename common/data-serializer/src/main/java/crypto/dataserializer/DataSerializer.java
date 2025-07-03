@@ -1,28 +1,22 @@
 package crypto.dataserializer;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.stereotype.Component;
 
 
 @Slf4j
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@Component
+@RequiredArgsConstructor
 public class DataSerializer {
 
-    private static final ObjectMapper objectMapper = initialize();
+    private final ObjectMapper objectMapper;
 
-    private static ObjectMapper initialize() {
-        return new ObjectMapper()
-                .registerModule(new JavaTimeModule())
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    }
-
-    public static <T> T deserialize(String data, Class<T> clazz) {
+    public <T> T deserialize(String data, Class<T> clazz) {
         try {
             return objectMapper.readValue(data, clazz);
         } catch (JsonProcessingException e) {
@@ -31,7 +25,7 @@ public class DataSerializer {
         }
     }
 
-    public static String serialize(Object object) {
+    public String serialize(Object object) {
         try {
             return objectMapper.writeValueAsString(object);
         } catch (JsonProcessingException e) {

@@ -1,6 +1,5 @@
 package crypto.event;
 
-import crypto.dataserializer.DataSerializer;
 import crypto.event.payload.EventPayload;
 
 import lombok.Getter;
@@ -18,13 +17,5 @@ public class Event {
         event.type = type;
         event.payload = payload;
         return event;
-    }
-
-    public String toJson() {
-        return DataSerializer.serialize(this);
-    }
-
-    public static Event fromJson(String json) {
-        return DataSerializer.deserialize(json, Event.class);
     }
 }

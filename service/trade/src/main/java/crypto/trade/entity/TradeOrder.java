@@ -33,7 +33,7 @@ public class TradeOrder {
     private BigDecimal filledQuantity;
 
     private TradeOrderSide orderSide;
-    private TradeOrderStatus orderStatus;
+    private TradeOrderStatus orderStatus = OPEN;
 
     private LocalDateTime registeredDateTime;
     private LocalDateTime deletedDateTime;

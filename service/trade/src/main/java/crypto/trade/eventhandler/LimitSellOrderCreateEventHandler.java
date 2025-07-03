@@ -55,6 +55,6 @@ public class LimitSellOrderCreateEventHandler implements EventHandler {
 
     @Override
     public EventType getSupportedEventType() {
-        return EventType.LIMIT_SELL_ORDER_CREATE;
+        return EventType.LIMIT_SELL_ORDER_TRADE;
     }
 }
