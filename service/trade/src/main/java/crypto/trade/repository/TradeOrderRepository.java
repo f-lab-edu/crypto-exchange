@@ -18,7 +18,6 @@ public interface TradeOrderRepository extends JpaRepository<TradeOrder, Long> {
         WHERE o.symbol = :symbol
           AND o.orderSide = :orderSide
           AND o.orderStatus = 'OPEN'
-          AND o.orderType = 'LIMIT'
           AND o.price <= :buyPrice
         ORDER BY o.price ASC, o.registeredDateTime ASC
     """)
@@ -29,7 +28,6 @@ public interface TradeOrderRepository extends JpaRepository<TradeOrder, Long> {
         WHERE o.symbol = :symbol
           AND o.orderSide = :orderSide
           AND o.orderStatus = 'OPEN'
-          AND o.orderType = 'LIMIT'
           AND o.price >= :sellPrice
         ORDER BY o.price DESC, o.registeredDateTime ASC
     """)
@@ -40,7 +38,6 @@ public interface TradeOrderRepository extends JpaRepository<TradeOrder, Long> {
         WHERE o.symbol = :symbol
           AND o.orderSide = :orderSide
           AND o.orderStatus = 'OPEN'
-          AND o.orderType = 'LIMIT'
         ORDER BY o.price ASC, o.registeredDateTime ASC
     """)
     List<TradeOrder> findMatchedMarketBuyOrders(@Param("symbol") String symbol, @Param("orderSide") TradeOrderSide orderSide);
@@ -50,7 +47,6 @@ public interface TradeOrderRepository extends JpaRepository<TradeOrder, Long> {
         WHERE o.symbol = :symbol
           AND o.orderSide = :orderSide
           AND o.orderStatus = 'OPEN'
-          AND o.orderType = 'LIMIT'
         ORDER BY o.price DESC, o.registeredDateTime ASC
     """)
     List<TradeOrder> findMatchedMarketSellOrders(@Param("symbol") String symbol, @Param("orderSide") TradeOrderSide orderSide);

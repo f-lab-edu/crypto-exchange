@@ -49,9 +49,12 @@ public class TradeEventService {
             EventHandler eventHandler = findEventHandler(event);
 
             if (eventHandler != null) {
-                tradeOrderRepository.save(
-                        TradeOrder.create(payload.getOrderId(), payload.getUserId(), payload.getSymbol(), payload.getPrice(),
-                                payload.getQuantity(), TradeOrderSide.valueOf(payload.getOrderSide()), timeProvider.now()));
+
+                if (event.getType() == LIMIT_BUY_ORDER_TRADE || event.getType() == LIMIT_SELL_ORDER_TRADE) {
+                    tradeOrderRepository.save(
+                            TradeOrder.create(payload.getOrderId(), payload.getUserId(), payload.getSymbol(), payload.getPrice(),
+                                    payload.getQuantity(), TradeOrderSide.valueOf(payload.getOrderSide()), timeProvider.now()));
+                }
 
                 eventHandler.handle(event);
 

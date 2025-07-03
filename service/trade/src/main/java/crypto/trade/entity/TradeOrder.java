@@ -34,7 +34,6 @@ public class TradeOrder {
 
     private TradeOrderSide orderSide;
     private TradeOrderStatus orderStatus = OPEN;
-    private TradeOrderType orderType;
 
     private LocalDateTime registeredDateTime;
     private LocalDateTime deletedDateTime;
