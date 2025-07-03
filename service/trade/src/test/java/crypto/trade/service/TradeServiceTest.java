@@ -32,7 +32,7 @@ import static org.mockito.Mockito.when;
 class TradeServiceTest {
 
     @Autowired
-    private TradeService tradeService;
+    private TradeEventService tradeService;
 
     @Autowired
     private UserRepository userRepository;

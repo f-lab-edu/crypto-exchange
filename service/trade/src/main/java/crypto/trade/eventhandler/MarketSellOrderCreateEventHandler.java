@@ -6,11 +6,12 @@ import crypto.event.EventType;
 import crypto.event.payload.EventPayload;
 import crypto.trade.entity.Trade;
 import crypto.trade.entity.TradeOrder;
-import crypto.trade.entity.TradeOrderRole;
-import crypto.trade.entity.TradeOrderSide;
 import crypto.trade.eventhandler.exception.TradeOrderNotFoundException;
 import crypto.trade.repository.TradeOrderRepository;
+
 import lombok.RequiredArgsConstructor;
+
+
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -55,12 +56,12 @@ public class MarketSellOrderCreateEventHandler implements EventHandler {
 
             Trade trade = tradeProcessor.createAndSaveTrade(sellOrder, buyOrder, buyPrice, matchedQty, SELL, takerFee, makerFee, registeredDateTime);
             remainQty = remainQty.subtract(matchedQty);
-            tradeProcessor.settleAndMarkOrders(sellOrder, buyOrder, matchedQty, takerTotalUsed, makerTotalUsed, trade, SELL);
+            tradeProcessor.settleAndMarkOrders(sellOrder, buyOrder, matchedQty, takerTotalUsed, makerTotalUsed, SELL);
         }
     }
 
     @Override
     public EventType getSupportedEventType() {
-        return EventType.MARKET_SELL_ORDER_CREATE;
+        return EventType.MARKET_SELL_ORDER_TRADE;
     }
 }

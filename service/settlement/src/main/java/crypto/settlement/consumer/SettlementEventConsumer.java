@@ -2,7 +2,8 @@ package crypto.settlement.consumer;
 
 import crypto.event.Event;
 import crypto.event.payload.EventPayload;
-import crypto.settlement.service.SettlementService;
+import crypto.settlement.service.SettlementEventService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,7 +22,8 @@ import static crypto.event.EventType.*;
 @RequiredArgsConstructor
 public class SettlementEventConsumer {
 
-    private final SettlementService settlementService;
+    private final DataSerializer dataSerializer;
+    private final SettlementEventService settlementEventService;
     private final KafkaTemplate<String, String> kafkaTemplate;
 
     @KafkaListener(topics = Topic.CRYPTO_TRADE, groupId = "crypto-trade", id = "tradeListener")

@@ -1,12 +1,10 @@
 package crypto.order.service.order;
 
 import crypto.common.time.TimeProvider;
-import crypto.event.EventSender;
+import crypto.event.eventsender.OrderEventSender;
 import crypto.event.payload.EventPayload;
-import crypto.order.controller.response.*;
-import crypto.order.entity.coin.Coin;
+import crypto.order.controller.order.response.*;
 import crypto.order.entity.order.Order;
-import crypto.order.entity.order.OrderSide;
 import crypto.order.entity.user.User;
 import crypto.order.repository.order.OrderRepository;
 import crypto.order.service.order.exception.OrderNotFoundException;
@@ -22,7 +20,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import static crypto.event.EventType.*;
@@ -37,14 +34,13 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final UserService userService;
     private final TimeProvider timeProvider;
-    private final EventSender eventSender;
+    private final OrderEventSender orderEventSender;
 
-    @Transactional
     public OrderCreateResponse createLimitBuyOrder(LimitOrderServiceRequest request) {
         User user = userService.getCurrentUser();
         LocalDateTime createdAt = timeProvider.now();
 
-        eventSender.publish(
+        orderEventSender.send(
                 LIMIT_BUY_ORDER_CREATE,
                 EventPayload.builder()
                         .userId(user.getId())
@@ -58,12 +54,11 @@ public class OrderService {
         return OrderCreateResponse.of(createdAt);
     }
 
-    @Transactional
     public OrderCreateResponse createLimitSellOrder(LimitOrderServiceRequest request) {
         User user = userService.getCurrentUser();
         LocalDateTime createdAt = timeProvider.now();
 
-        eventSender.publish(
+        orderEventSender.send(
                 LIMIT_SELL_ORDER_CREATE,
                 EventPayload.builder()
                         .userId(user.getId())
@@ -77,14 +72,14 @@ public class OrderService {
         return OrderCreateResponse.of(createdAt);
     }
 
-    @Transactional
     public OrderCreateResponse createMarketBuyOrder(MarketBuyOrderServiceRequest request) {
         User user = userService.getCurrentUser();
         LocalDateTime createdAt = timeProvider.now();
 
-        eventSender.publish(
+        orderEventSender.send(
                 MARKET_BUY_ORDER_CREATE,
                 EventPayload.builder()
+                        .userId(user.getId())
                         .symbol(request.getSymbol())
                         .marketTotalPrice(request.getTotalPrice())
                         .build()
@@ -93,14 +88,14 @@ public class OrderService {
         return OrderCreateResponse.of(createdAt);
     }
 
-    @Transactional
     public OrderCreateResponse createMarketSellOrder(MarketSellOrderServiceRequest request) {
         User user = userService.getCurrentUser();
         LocalDateTime createdAt = timeProvider.now();
 
-        eventSender.publish(
+        orderEventSender.send(
                 MARKET_SELL_ORDER_CREATE,
                 EventPayload.builder()
+                        .userId(user.getId())
                         .symbol(request.getSymbol())
                         .marketTotalQuantity(request.getTotalAmount())
                         .build()
@@ -139,15 +134,5 @@ public class OrderService {
 
         return orderRepository.findByUserIdAndOrderStatus(userService.getCurrentUser().getId(), OPEN, pageable)
                 .map(OpenOrderListResponse::of);
-    }
-
-    private Order buildLimitOrder(LimitOrderServiceRequest request, OrderSide orderSide, User user, LocalDateTime registeredDateTime) {
-        String symbol = request.getSymbol();
-        BigDecimal price = request.getPrice();
-        BigDecimal quantity = request.getQuantity();
-
-        Coin coin = coinService.getCoinOrThrow(symbol);
-
-        return Order.createLimitOrder(price, quantity, orderSide, coin, user, registeredDateTime);
     }
 }

@@ -1,12 +1,9 @@
 package crypto.trade.consumer;
 
-import crypto.common.time.TimeProvider;
+import crypto.dataserializer.DataSerializer;
 import crypto.event.Event;
 import crypto.event.payload.EventPayload;
-import crypto.trade.entity.TradeOrder;
-import crypto.trade.entity.TradeOrderSide;
-import crypto.trade.repository.TradeOrderRepository;
-import crypto.trade.service.TradeService;
+import crypto.trade.service.TradeEventService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +16,6 @@ import org.springframework.stereotype.Component;
 import java.util.UUID;
 
 import static crypto.event.EventType.*;
-import static crypto.event.EventType.FAIL_ORDER_EVENT;
 
 
 @Slf4j
@@ -27,46 +23,43 @@ import static crypto.event.EventType.FAIL_ORDER_EVENT;
 @RequiredArgsConstructor
 public class TradeEventConsumer {
 
-    private final TradeService tradeService;
-    private final TradeOrderRepository tradeOrderRepository;
-    private final TimeProvider timeProvider;
+    private final DataSerializer dataSerializer;
+    private final TradeEventService tradeEventService;
     private final KafkaTemplate<String, String> kafkaTemplate;
 
-    @KafkaListener(topics = Topic.CRYPTO_ORDER, groupId = "crypto-order", id = "orderListener")
+    @KafkaListener(topics = Topic.CRYPTO_TRADE, groupId = "crypto-trade", id = "tradeListener")
     public void listen(String message, Acknowledgment ack) {
         log.info("[TradeEventConsumer.listen] received message={}", message);
-        Event event = Event.fromJson(message);
+        Event event = dataSerializer.deserialize(message, Event.class);
 
-        if (event != null) {
-            EventPayload payload = event.getPayload();
-            try {
-                tradeOrderRepository.save(
-                        TradeOrder.create(payload.getOrderId(), payload.getUserId(), payload.getSymbol(), payload.getPrice(),
-                                payload.getQuantity(), TradeOrderSide.valueOf(payload.getOrderSide()), timeProvider.now())
-                );
-                tradeService.handleEvent(event);
-            } catch (Exception e) {
-                log.error("[TradeEventConsumer.listen] Error processing trade event: event={}, message={}, error={}", event, message, e.getMessage(), e);
-                sendToDeadLetterQueue(message, "ERROR_PROCESSING_TRADE_EVENT");
-            }
-        } else {
+        if (event == null) {
             log.error("[TradeEventConsumer.listen] Failed to parse event from message: message={}", message);
             sendToDeadLetterQueue(message, "EVENT_IS_NULL_AFTER_PARSING");
+            ack.acknowledge();
+            return;
         }
-        ack.acknowledge();
+
+        try {
+            tradeEventService.handleEvent(event);
+            ack.acknowledge();
+        } catch (Exception e) {
+            log.error("[TradeEventConsumer.listen] Error processing trade event: event={}, message={}, error={}", event, message, e.getMessage(), e);
+            sendToDeadLetterQueue(message, "ERROR_PROCESSING_TRADE_EVENT");
+            ack.acknowledge();
+        }
     }
 
     public void sendToDeadLetterQueue(String originalMessage, String failMessage) {
-        String dlqTopic = Topic.CRYPTO_ORDER_DLQ;
+        String dlqTopic = Topic.CRYPTO_TRADE_DLQ;
 
         EventPayload payload = EventPayload.builder()
                 .originalMessage(originalMessage)
                 .failMessage(failMessage)
                 .build();
 
-        String json = Event.of(
-                UUID.randomUUID().toString(), FAIL_ORDER_EVENT, payload
-        ).toJson();
+        String json = dataSerializer.serialize(Event.of(
+                UUID.randomUUID().toString(), FAIL_TRADE_EVENT, payload
+        ));
 
         kafkaTemplate.send(dlqTopic, json)
                 .whenComplete((result, ex) -> {

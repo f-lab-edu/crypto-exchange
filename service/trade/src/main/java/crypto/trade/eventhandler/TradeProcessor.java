@@ -1,6 +1,7 @@
 package crypto.trade.eventhandler;
 
 import crypto.common.fee.FeePolicy;
+import crypto.event.eventsender.SettlementEventSender;
 import crypto.event.payload.EventPayload;
 import crypto.trade.entity.Trade;
 import crypto.trade.entity.TradeOrder;
@@ -27,7 +28,7 @@ import static crypto.trade.entity.TradeOrderSide.*;
 @Component
 @RequiredArgsConstructor
 public class TradeProcessor {
-    // private final EventSender outboxEventPublisher;
+    private final SettlementEventSender settlementEventSender;
     private final TradeRepository tradeRepository;
     private final FeePolicy feePolicy;
 
@@ -49,11 +50,12 @@ public class TradeProcessor {
             matchOrder.fill(matchedQty);
             placeOrder.fill(matchedQty);
 
-            Trade trade = createAndSaveTrade(matchOrder, placeOrder, matchedPrice, matchedQty, orderSide, takerFee, makerFee, registeredDateTime);
+            createAndSaveTrade(matchOrder, placeOrder, matchedPrice, matchedQty, orderSide, takerFee, makerFee, registeredDateTime);
 
             if (orderSide.equals(BUY)) {
-                outboxEventPublisher.publish(
-                        TRADE_BUY_ORDER_CREATE,
+                settlementEventSender.send(
+                        BUY_ORDER_SETTLEMENT,
+                        matchOrder.getId(),
                         EventPayload.builder()
                                 .takerId(matchOrder.getUserId())
                                 .makerId(placeOrder.getUserId())
@@ -61,12 +63,12 @@ public class TradeProcessor {
                                 .makerTotalUsed(makerTotalUsed)
                                 .matchedQuantity(matchedQty)
                                 .symbol(matchOrder.getSymbol())
-                                .build(),
-                        trade.getId()
+                                .build()
                 );
             } else {
-                outboxEventPublisher.publish(
-                        TRADE_SELL_ORDER_CREATE,
+                settlementEventSender.send(
+                        SELL_ORDER_SETTLEMENT,
+                        matchOrder.getId(),
                         EventPayload.builder()
                                 .takerId(matchOrder.getUserId())
                                 .makerId(placeOrder.getUserId())
@@ -74,8 +76,7 @@ public class TradeProcessor {
                                 .makerTotalUsed(makerTotalUsed)
                                 .matchedQuantity(matchedQty)
                                 .symbol(matchOrder.getSymbol())
-                                .build(),
-                        trade.getId()
+                                .build()
                 );
             }
         } catch (FilledQuantityExceedException e) {
@@ -88,13 +89,14 @@ public class TradeProcessor {
     }
 
     public void settleAndMarkOrders(TradeOrder matchOrder, TradeOrder placeOrder, BigDecimal matchedQty, BigDecimal takerTotalUsed,
-                                    BigDecimal makerTotalUsed, Trade trade, TradeOrderSide orderSide) {
+                                    BigDecimal makerTotalUsed, TradeOrderSide orderSide) {
         matchOrder.fill(matchedQty);
         placeOrder.fill(matchedQty);
 
         if (orderSide.equals(BUY)) {
-            outboxEventPublisher.publish(
-                    TRADE_BUY_ORDER_CREATE,
+            settlementEventSender.send(
+                    BUY_ORDER_SETTLEMENT,
+                    matchOrder.getId(),
                     EventPayload.builder()
                             .takerId(matchOrder.getUserId())
                             .makerId(placeOrder.getUserId())
@@ -102,12 +104,12 @@ public class TradeProcessor {
                             .makerTotalUsed(makerTotalUsed)
                             .matchedQuantity(matchedQty)
                             .symbol(matchOrder.getSymbol())
-                            .build(),
-                    trade.getId()
+                            .build()
             );
         } else {
-            outboxEventPublisher.publish(
-                    TRADE_SELL_ORDER_CREATE,
+            settlementEventSender.send(
+                    SELL_ORDER_SETTLEMENT,
+                    matchOrder.getId(),
                     EventPayload.builder()
                             .takerId(matchOrder.getUserId())
                             .makerId(placeOrder.getUserId())
@@ -115,8 +117,7 @@ public class TradeProcessor {
                             .makerTotalUsed(makerTotalUsed)
                             .matchedQuantity(matchedQty)
                             .symbol(matchOrder.getSymbol())
-                            .build(),
-                    trade.getId()
+                            .build()
             );
         }
 
@@ -125,14 +126,14 @@ public class TradeProcessor {
 
     public void refundUnmatchedLockedBalance(TradeOrder order, BigDecimal remainPrice) {
         if (remainPrice.compareTo(BigDecimal.ZERO) > 0) {
-            outboxEventPublisher.publish(
+            settlementEventSender.send(
                     REFUND_LOCKED_BALANCE,
+                    order.getUserId(),
                     EventPayload.builder()
                             .orderId(order.getId())
                             .userId(order.getUserId())
                             .totalRemainPrice(remainPrice)
-                            .build(),
-                    order.getUserId()
+                            .build()
             );
         }
     }
