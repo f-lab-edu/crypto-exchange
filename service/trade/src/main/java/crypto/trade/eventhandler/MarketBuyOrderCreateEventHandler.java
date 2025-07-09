@@ -58,7 +58,7 @@ public class MarketBuyOrderCreateEventHandler implements EventHandler {
             if (takerTotalUsed.compareTo(remainPrice) > 0) break;
 
             Trade trade = tradeProcessor.createAndSaveTrade(buyOrder, sellOrder, sellPrice, matchedQty, BUY, takerFee, makerFee, registeredDateTime);
-            tradeProcessor.settleAndMarkOrders(buyOrder, sellOrder, matchedQty, takerTotalUsed, makerTotalUsed, trade, BUY);
+            tradeProcessor.settleAndMarkOrders(buyOrder, sellOrder, matchedQty, takerTotalUsed, makerTotalUsed, BUY);
             remainPrice = remainPrice.subtract(takerTotalUsed);
         }
 
@@ -71,6 +71,6 @@ public class MarketBuyOrderCreateEventHandler implements EventHandler {
 
     @Override
     public EventType getSupportedEventType() {
-        return EventType.MARKET_BUY_ORDER_CREATE;
+        return EventType.MARKET_BUY_ORDER_TRADE;
     }
 }
