@@ -21,7 +21,7 @@ public class TradeEventSender {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final DataSerializer dataSerializer;
 
-    @Async("messageRelayPublishEventExecutor")
+    @Async("publishEventExecutor")
     public void send(EventType type, Long key, EventPayload payload) {
         kafkaTemplate.send(
             type.getTopic(),
