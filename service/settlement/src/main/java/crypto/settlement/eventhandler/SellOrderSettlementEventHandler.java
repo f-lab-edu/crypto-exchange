@@ -3,8 +3,8 @@ package crypto.settlement.eventhandler;
 import crypto.event.Event;
 import crypto.event.EventType;
 import crypto.event.payload.EventPayload;
-import crypto.settlement.entity.UserCoin;
-import crypto.settlement.service.UserCoinService;
+import crypto.settlementdata.entity.UserCoin;
+import crypto.settlementdata.service.UserCoinService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -34,7 +34,7 @@ public class SellOrderSettlementEventHandler implements EventHandler {
 
     @Override
     public EventType getSupportedEventType() {
-        return EventType.TRADE_SELL_ORDER_CREATE;
+        return EventType.SELL_ORDER_SETTLEMENT;
     }
 }
 

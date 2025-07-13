@@ -1,20 +1,10 @@
 package crypto.settlement.service;
 
-import crypto.common.fee.FeePolicy;
-import crypto.common.security.context.UserContext;
 import crypto.event.Event;
-import crypto.settlement.controller.response.CheckBalanceResponse;
-import crypto.settlement.controller.response.CheckQuantityResponse;
 import crypto.settlement.entity.SettlementProcessedEvent;
-import crypto.settlement.entity.UserBalance;
-import crypto.settlement.entity.UserCoin;
 import crypto.settlement.eventhandler.EventHandler;
 import crypto.settlement.repository.SettlementProcessedEventDbRepository;
 import crypto.settlement.repository.SettlementProcessedEventRepository;
-import crypto.settlement.service.exception.NotEnoughBalanceException;
-import crypto.settlement.service.exception.NotEnoughQuantityException;
-import crypto.settlement.service.request.CheckBalanceServiceRequest;
-import crypto.settlement.service.request.CheckQuantityServiceRequest;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,18 +20,14 @@ import java.util.List;
 @Service
 public class SettlementEventService {
 
-    private final UserBalanceService userBalanceService;
-    private final UserCoinService userCoinService;
     private final List<EventHandler> eventHandlers;
     private final SettlementProcessedEventRepository settlementProcessedEventRepository;
     private final SettlementProcessedEventDbRepository settlementProcessedEventDbRepository;
-    private final FeePolicy feePolicy;
 
     @Transactional
     public void handleEvent(Event event) {
         String eventId = event.getEventId();
         String key = settlementProcessedEventRepository.generateKey(eventId);
-
         Boolean isNewEvent = settlementProcessedEventRepository.setIfAbsent(eventId);
 
         if (Boolean.FALSE.equals(isNewEvent)) {

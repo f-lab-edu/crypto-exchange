@@ -1,6 +1,6 @@
 package crypto.settlement.eventhandler;
 
-import crypto.settlement.service.UserBalanceService;
+import crypto.settlementdata.service.UserBalanceService;
 
 import lombok.RequiredArgsConstructor;
 

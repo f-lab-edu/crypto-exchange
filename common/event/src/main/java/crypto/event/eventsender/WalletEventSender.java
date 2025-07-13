@@ -16,20 +16,21 @@ import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
-public class OrderEventSender {
+public class WalletEventSender {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final DataSerializer dataSerializer;
 
     @Async("publishEventExecutor")
-    public void send(EventType type, EventPayload payload) {
+    public void send(EventType type, Long key, EventPayload payload) {
         kafkaTemplate.send(
-                type.getTopic(),
-                dataSerializer.serialize(Event.of(
-                        UUID.randomUUID().toString(),
-                        type,
-                        payload
-                ))
+            type.getTopic(),
+            String.valueOf(key),
+            dataSerializer.serialize(Event.of(
+                    UUID.randomUUID().toString(),
+                    type,
+                    payload
+            ))
         );
     }
 }
