@@ -1,7 +1,9 @@
-dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter'
-    implementation 'org.springframework.kafka:spring-kafka'
+plugins {
+    id 'java-conventions'
+    id 'event-conventions'
+}
 
+dependencies {
     implementation project(':common:common')
     implementation project(':common:data-serializer')
 }

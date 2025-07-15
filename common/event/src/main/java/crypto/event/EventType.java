@@ -25,6 +25,9 @@ public enum EventType {
     SELL_ORDER_SETTLEMENT(Topic.CRYPTO_SETTLEMENT, null),
     REFUND_LOCKED_BALANCE(Topic.CRYPTO_SETTLEMENT, null),
 
+    ORDER_CANCEL_EVENT(Topic.CRYPTO_ORDER_CANCEL, null),
+    TRADE_CANCEL_EVENT(Topic.CRYPTO_TRADE_CANCEL, null),
+
     FAIL_ORDER_EVENT(Topic.CRYPTO_ORDER_DLQ, null),
     FAIL_TRADE_EVENT(Topic.CRYPTO_TRADE_DLQ, null);
 
@@ -40,7 +43,9 @@ public enum EventType {
 
     public static class Topic {
         public static final String CRYPTO_ORDER = "crypto-order";
+        public static final String CRYPTO_ORDER_CANCEL = "crypto-order-cancel";
         public static final String CRYPTO_TRADE = "crypto-trade";
+        public static final String CRYPTO_TRADE_CANCEL = "crypto-trade-cancel";
         public static final String CRYPTO_SETTLEMENT = "crypto-settlement";
         public static final String CRYPTO_ORDER_DLQ = "crypto-order-dlq";
         public static final String CRYPTO_TRADE_DLQ = "crypto-trade-dlq";

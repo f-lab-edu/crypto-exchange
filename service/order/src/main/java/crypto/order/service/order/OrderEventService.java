@@ -8,6 +8,7 @@ import crypto.order.entity.coin.Coin;
 import crypto.order.entity.order.Order;
 import crypto.order.entity.order.OrderProcessedEvent;
 import crypto.order.entity.order.OrderSide;
+import crypto.order.entity.order.exception.OrderNotFoundException;
 import crypto.order.entity.user.User;
 import crypto.order.repository.order.OrderProcessedEventDbRepository;
 import crypto.order.repository.order.OrderProcessedEventRepository;
@@ -25,6 +26,7 @@ import java.time.LocalDateTime;
 
 import static crypto.event.EventType.*;
 import static crypto.event.EventType.MARKET_SELL_ORDER_CREATE;
+import static crypto.order.entity.order.OrderStatus.*;
 
 
 @Slf4j
@@ -46,7 +48,7 @@ public class OrderEventService {
         Boolean isNewEvent = orderProcessedEventRepository.setIfAbsent(eventId);
 
         if (!isNewEvent) {
-            log.warn("[OrderEventService.process] Duplicate event detected, skipping processing. eventId={}", eventId);
+            log.warn("[OrderEventService.handleEvent] Duplicate event detected, skipping processing. eventId={}", eventId);
             return;
         }
 
@@ -64,11 +66,38 @@ public class OrderEventService {
                 tradeEventSender.send(event.getType().toMatchingEventType(), order.getId(), tradePayload);
 
                 orderProcessedEventDbRepository.save(new OrderProcessedEvent(eventId));
-                log.info("[OrderEventConsumer.listen] Order saved successfully: {}", order);
+                log.info("[OrderEventConsumer.handleEvent] Order saved successfully: {}", order);
 
             } else {
                 throw new IllegalArgumentException("Unknown event type received: " + event.getType());
             }
+
+        } catch (Exception e) {
+            orderProcessedEventRepository.delete(orderProcessedEventRepository.generateKey(eventId));
+            throw new RuntimeException("Failed to process order creation for eventId: " + eventId, e);
+        }
+    }
+
+    @Transactional
+    public void handleFailEvent(Event event) {
+        String eventId = event.getEventId();
+        Boolean isNewEvent = orderProcessedEventRepository.setIfAbsent(eventId);
+
+        if (!isNewEvent) {
+            log.warn("[OrderEventService.handleFailEvent] Duplicate event detected, skipping processing. eventId={}", eventId);
+            return;
+        }
+
+        try {
+            EventPayload payload = event.getPayload();
+            Order order = orderRepository.findById(payload.getOrderId())
+                    .orElseThrow(OrderNotFoundException::new);
+
+            order.handleOrderStatus(CANCELLED);
+            orderRepository.save(order);
+
+            orderProcessedEventDbRepository.save(new OrderProcessedEvent(eventId));
+            log.info("[OrderEventConsumer.handleFailEvent] Order cancellation successfully: {}", order);
 
         } catch (Exception e) {
             orderProcessedEventRepository.delete(orderProcessedEventRepository.generateKey(eventId));
