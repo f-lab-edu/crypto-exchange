@@ -55,7 +55,6 @@ public class TradeEventService {
                             TradeOrder.create(payload.getOrderId(), payload.getUserId(), payload.getSymbol(), payload.getPrice(),
                                     payload.getQuantity(), TradeOrderSide.valueOf(payload.getOrderSide()), timeProvider.now()));
                 }
-
                 eventHandler.handle(event);
 
                 tradeProcessedEventDbRepository.save(new TradeProcessedEvent(eventId));

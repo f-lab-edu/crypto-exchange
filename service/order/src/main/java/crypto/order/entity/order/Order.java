@@ -44,7 +44,7 @@ public class Order extends BaseEntity {
     private OrderSide orderSide;
 
     @Enumerated(EnumType.STRING)
-    private OrderStatus orderStatus = OPEN;
+    private OrderStatus orderStatus = ORDER_PENDING;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "coin_id")
@@ -108,6 +108,10 @@ public class Order extends BaseEntity {
 
     public void markDeleted(LocalDateTime deletedDateTime) {
         this.deletedDateTime = deletedDateTime;
+    }
+
+    public void handleOrderStatus(OrderStatus orderStatus) {
+        this.orderStatus = orderStatus;
     }
 
     public BigDecimal calculateRemainQuantity() {
