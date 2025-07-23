@@ -6,7 +6,6 @@ import crypto.event.EventType;
 import crypto.event.payload.EventPayload;
 import crypto.trade.entity.Trade;
 import crypto.trade.entity.TradeOrder;
-import crypto.trade.eventhandler.exception.TradeOrderNotFoundException;
 import crypto.trade.repository.TradeOrderRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -30,14 +29,11 @@ public class MarketBuyOrderCreateEventHandler implements EventHandler {
     private final TimeProvider timeProvider;
 
     @Override
-    public void handle(Event event) {
+    public void handle(Event event, TradeOrder order) {
         LocalDateTime registeredDateTime = timeProvider.now();
         EventPayload payload = event.getPayload();
 
-        TradeOrder buyOrder = tradeOrderRepository.findById(payload.getOrderId())
-                .orElseThrow(TradeOrderNotFoundException::new);
-
-        List<TradeOrder> sellOrders = tradeOrderRepository.findMatchedMarketBuyOrders(buyOrder.getSymbol(), buyOrder.getOrderSide());
+        List<TradeOrder> sellOrders = tradeOrderRepository.findMatchedMarketBuyOrders(payload.getSymbol(), SELL);
 
         BigDecimal remainPrice = payload.getMarketTotalPrice();
 
@@ -57,14 +53,14 @@ public class MarketBuyOrderCreateEventHandler implements EventHandler {
 
             if (takerTotalUsed.compareTo(remainPrice) > 0) break;
 
-            Trade trade = tradeProcessor.createAndSaveTrade(buyOrder, sellOrder, sellPrice, matchedQty, BUY, takerFee, makerFee, registeredDateTime);
-            tradeProcessor.settleAndMarkOrders(buyOrder, sellOrder, matchedQty, takerTotalUsed, makerTotalUsed, BUY);
+            Trade trade = tradeProcessor.createAndSaveTradeMarketOrder(sellOrder, sellPrice, matchedQty, BUY, takerFee, makerFee, registeredDateTime);
+            tradeProcessor.settleAndMarkOrders(payload.getOrderId(), trade.getId(), payload.getUserId(), sellOrder.getUserId(), sellOrder, matchedQty, takerTotalUsed, makerTotalUsed, BUY);
             remainPrice = remainPrice.subtract(takerTotalUsed);
         }
 
         if (remainPrice.compareTo(BigDecimal.ZERO) > 0) {
             BigDecimal totalPrice = remainPrice.add(tradeProcessor.calculateTradeFee(payload.getMarketTotalPrice(), TAKER));
-            tradeProcessor.refundUnmatchedLockedBalance(buyOrder, totalPrice);
+            tradeProcessor.refundUnmatchedLockedBalance(payload.getUserId(), totalPrice);
         }
 
     }

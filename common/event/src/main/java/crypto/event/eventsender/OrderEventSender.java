@@ -39,25 +39,33 @@ public class OrderEventSender {
 
         future.whenComplete((result, ex) -> {
             if (ex != null) {
-                log.error("Unable to send message=[{}] due to an error", message, ex);
+                log.error("[OrderEventSender.send] Unable to send message=[{}] due to an error", message, ex);
                 sendToDeadLetterQueue(message, "ERROR_SENDING_ORDER_EVENT");
             } else {
-                log.info("Sent message=[{}] with offset=[{}]", message, result.getRecordMetadata().offset());
+                log.info("[OrderEventSender.send] Sent message=[{}] with offset=[{}]", message, result.getRecordMetadata().offset());
             }
         });
     }
 
     @Async("publishEventExecutor")
-    public void sendFailEvent(EventType type, Long key, EventPayload payload) {
-        kafkaTemplate.send(
-                type.getTopic(),
-                String.valueOf(key),
-                dataSerializer.serialize(Event.of(
-                        UUID.randomUUID().toString(),
-                        type,
-                        payload
-                ))
-        );
+    public void sendFailCompleteEvent(EventType type, Long key, EventPayload payload) {
+        String message = dataSerializer.serialize(Event.of(
+                UUID.randomUUID().toString(),
+                type,
+                payload
+        ));
+
+        CompletableFuture<SendResult<String, String>> future = kafkaTemplate.send(
+                type.getTopic(), String.valueOf(key), message);
+
+        future.whenComplete((result, ex) -> {
+            if (ex != null) {
+                log.error("[OrderEventSender.sendFailCompleteEvent] Unable to send message=[{}] due to an error", message, ex);
+                sendToDeadLetterQueue(message, "ERROR_SENDING_ORDER_EVENT");
+            } else {
+                log.info("[OrderEventSender.sendFailCompleteEvent] Sent message=[{}] with offset=[{}]", message, result.getRecordMetadata().offset());
+            }
+        });
     }
 
     public void sendToDeadLetterQueue(String originalMessage, String failMessage) {

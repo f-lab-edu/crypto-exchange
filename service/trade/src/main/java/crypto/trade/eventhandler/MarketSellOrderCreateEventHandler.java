@@ -6,7 +6,6 @@ import crypto.event.EventType;
 import crypto.event.payload.EventPayload;
 import crypto.trade.entity.Trade;
 import crypto.trade.entity.TradeOrder;
-import crypto.trade.eventhandler.exception.TradeOrderNotFoundException;
 import crypto.trade.repository.TradeOrderRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -30,14 +29,11 @@ public class MarketSellOrderCreateEventHandler implements EventHandler {
     private final TimeProvider timeProvider;
 
     @Override
-    public void handle(Event event) {
+    public void handle(Event event, TradeOrder order) {
         LocalDateTime registeredDateTime = timeProvider.now();
         EventPayload payload = event.getPayload();
 
-        TradeOrder sellOrder = tradeOrderRepository.findById(payload.getOrderId())
-                .orElseThrow(TradeOrderNotFoundException::new);
-
-        List<TradeOrder> buyOrders = tradeOrderRepository.findMatchedMarketSellOrders(sellOrder.getSymbol(), sellOrder.getOrderSide());
+        List<TradeOrder> buyOrders = tradeOrderRepository.findMatchedMarketSellOrders(payload.getSymbol(), BUY);
 
         BigDecimal remainQty = payload.getMarketTotalQuantity();
 
@@ -54,9 +50,9 @@ public class MarketSellOrderCreateEventHandler implements EventHandler {
             BigDecimal takerTotalUsed = matchedAmount.add(takerFee);
             BigDecimal makerTotalUsed = matchedAmount.add(makerFee);
 
-            Trade trade = tradeProcessor.createAndSaveTrade(sellOrder, buyOrder, buyPrice, matchedQty, SELL, takerFee, makerFee, registeredDateTime);
+            Trade trade = tradeProcessor.createAndSaveTradeMarketOrder(buyOrder, buyPrice, matchedQty, SELL, takerFee, makerFee, registeredDateTime);
+            tradeProcessor.settleAndMarkOrders(payload.getOrderId(), trade.getId(), payload.getUserId(), buyOrder.getUserId(), buyOrder, matchedQty, takerTotalUsed, makerTotalUsed, SELL);
             remainQty = remainQty.subtract(matchedQty);
-            tradeProcessor.settleAndMarkOrders(sellOrder, buyOrder, matchedQty, takerTotalUsed, makerTotalUsed, SELL);
         }
     }
 

@@ -1,6 +1,6 @@
 plugins {
     id 'java-conventions'
-    id 'api-conventions'
+    id 'settlement-api-conventions'
 }
 
 dependencies {

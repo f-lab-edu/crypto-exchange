@@ -27,9 +27,12 @@ public enum EventType {
 
     ORDER_CANCEL_EVENT(Topic.CRYPTO_ORDER_CANCEL, null),
     TRADE_CANCEL_EVENT(Topic.CRYPTO_TRADE_CANCEL, null),
+    ORDER_COMPLETE_EVENT(Topic.CRYPTO_ORDER_COMPLETE, null),
+    TRADE_COMPLETE_EVENT(Topic.CRYPTO_TRADE_COMPLETE, null),
 
     FAIL_ORDER_EVENT(Topic.CRYPTO_ORDER_DLQ, null),
-    FAIL_TRADE_EVENT(Topic.CRYPTO_TRADE_DLQ, null);
+    FAIL_TRADE_EVENT(Topic.CRYPTO_TRADE_DLQ, null),
+    FAIL_SETTLEMENT_EVENT(Topic.CRYPTO_SETTLEMENT_DLQ, null);
 
     private final String topic;
     private final String matchingTypeName;
@@ -44,8 +47,10 @@ public enum EventType {
     public static class Topic {
         public static final String CRYPTO_ORDER = "crypto-order";
         public static final String CRYPTO_ORDER_CANCEL = "crypto-order-cancel";
+        public static final String CRYPTO_ORDER_COMPLETE = "crypto-order-complete";
         public static final String CRYPTO_TRADE = "crypto-trade";
         public static final String CRYPTO_TRADE_CANCEL = "crypto-trade-cancel";
+        public static final String CRYPTO_TRADE_COMPLETE = "crypto-trade-complete";
         public static final String CRYPTO_SETTLEMENT = "crypto-settlement";
         public static final String CRYPTO_ORDER_DLQ = "crypto-order-dlq";
         public static final String CRYPTO_TRADE_DLQ = "crypto-trade-dlq";

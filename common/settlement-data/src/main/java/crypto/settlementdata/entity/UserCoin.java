@@ -19,7 +19,6 @@ public class UserCoin {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true)
     private Long userId;
 
     private String symbol;

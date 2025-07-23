@@ -5,6 +5,7 @@ plugins {
 
 dependencies {
     implementation project(':common:common')
+    implementation project(':common:base-entity')
     implementation project(':common:event')
     implementation project(':common:data-serializer')
 }

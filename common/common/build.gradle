@@ -2,8 +2,3 @@ plugins {
     id 'java-conventions'
     id 'common-conventions'
 }
-
-dependencies {
-    implementation project(':common:common')
-    implementation project(':common:event')
-}
