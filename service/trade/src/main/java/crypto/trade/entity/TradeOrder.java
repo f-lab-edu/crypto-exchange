@@ -30,13 +30,15 @@ public class TradeOrder {
     private String symbol;
     private BigDecimal price;
     private BigDecimal quantity;
-    private BigDecimal filledQuantity;
+    private BigDecimal filledQuantity = BigDecimal.ZERO;
 
+    @Enumerated(EnumType.STRING)
     private TradeOrderSide orderSide;
+
+    @Enumerated(EnumType.STRING)
     private TradeOrderStatus orderStatus = OPEN;
 
     private LocalDateTime registeredDateTime;
-    private LocalDateTime deletedDateTime;
 
     @Builder
     public TradeOrder(Long orderId, Long userId, String symbol, BigDecimal price, BigDecimal quantity,
@@ -71,8 +73,16 @@ public class TradeOrder {
         this.filledQuantity = this.filledQuantity.add(filledQuantity);
     }
 
+    public void cancelQuantity(BigDecimal matchedQuantity) {
+        this.filledQuantity = this.filledQuantity.subtract(filledQuantity);
+    }
+
     public void markCompleted() {
         this.orderStatus = FILLED;
+    }
+
+    public void handleOrderStatus(TradeOrderStatus tradeOrderStatus) {
+        this.orderStatus = tradeOrderStatus;
     }
 
     public BigDecimal calculateRemainQuantity() {

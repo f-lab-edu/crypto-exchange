@@ -36,10 +36,6 @@ public class UserBalance {
         this.currency = currency;
     }
 
-    public void matchUserId(Long userId) {
-        this.userId = userId;
-    }
-
     public void increaseAvailableBalance(BigDecimal price) {
         this.availableBalance = this.availableBalance.add(price);
     }

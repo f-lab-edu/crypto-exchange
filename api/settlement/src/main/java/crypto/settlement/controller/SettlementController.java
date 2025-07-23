@@ -18,18 +18,18 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class SettlementController {
 
-    private final SettlementService walletService;
+    private final SettlementService settlementService;
 
     @PostMapping("/api/v1/wallet/check-balance")
     public ApiResponse<CheckBalanceResponse> checkUserBalance(@RequestBody CheckBalanceRequest request) {
 
-        return ApiResponse.success(walletService.checkBalance(request.toServiceRequest()));
+        return ApiResponse.success(settlementService.checkBalance(request.toServiceRequest()));
     }
 
     @PostMapping("/api/v1/wallet/check-quantity")
     public ApiResponse<CheckQuantityResponse> checkUserBalance(@RequestBody CheckQuantityRequest request) {
 
-        return ApiResponse.success(walletService.checkQuantity(request.toServiceRequest()));
+        return ApiResponse.success(settlementService.checkQuantity(request.toServiceRequest()));
     }
 
 }

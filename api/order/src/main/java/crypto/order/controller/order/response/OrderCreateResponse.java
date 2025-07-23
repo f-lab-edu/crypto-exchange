@@ -2,11 +2,13 @@ package crypto.order.controller.order.response;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 
 @Getter
+@NoArgsConstructor
 public class OrderCreateResponse {
 
     private LocalDateTime createdAt;

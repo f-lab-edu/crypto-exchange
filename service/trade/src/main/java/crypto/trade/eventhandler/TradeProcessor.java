@@ -32,7 +32,7 @@ public class TradeProcessor {
     private final TradeRepository tradeRepository;
     private final FeePolicy feePolicy;
 
-    public void processMatchLimitOrder(TradeOrder matchOrder, TradeOrder placeOrder, TradeOrderSide orderSide, LocalDateTime registeredDateTime) {
+    public void processMatchLimitOrder(Long orderId, TradeOrder matchOrder, TradeOrder placeOrder, TradeOrderSide orderSide, LocalDateTime registeredDateTime) {
         try {
             BigDecimal matchOrderQuantity = matchOrder.calculateRemainQuantity();
             BigDecimal placeOrderQuantity = placeOrder.calculateRemainQuantity();
@@ -50,13 +50,17 @@ public class TradeProcessor {
             matchOrder.fill(matchedQty);
             placeOrder.fill(matchedQty);
 
-            createAndSaveTrade(matchOrder, placeOrder, matchedPrice, matchedQty, orderSide, takerFee, makerFee, registeredDateTime);
+            Trade trade = createAndSaveTradeLimitOrder(matchOrder, placeOrder, matchedPrice, matchedQty, orderSide, takerFee, makerFee, registeredDateTime);
 
             if (orderSide.equals(BUY)) {
                 settlementEventSender.send(
                         BUY_ORDER_SETTLEMENT,
                         matchOrder.getId(),
                         EventPayload.builder()
+                                .orderId(orderId)
+                                .tradeId(trade.getId())
+                                .takerOrderId(matchOrder.getId())
+                                .makerOrderId(placeOrder.getId())
                                 .takerId(matchOrder.getUserId())
                                 .makerId(placeOrder.getUserId())
                                 .takerTotalUsed(takerTotalUsed)
@@ -70,6 +74,10 @@ public class TradeProcessor {
                         SELL_ORDER_SETTLEMENT,
                         matchOrder.getId(),
                         EventPayload.builder()
+                                .orderId(orderId)
+                                .tradeId(trade.getId())
+                                .takerOrderId(matchOrder.getId())
+                                .makerOrderId(placeOrder.getId())
                                 .takerId(matchOrder.getUserId())
                                 .makerId(placeOrder.getUserId())
                                 .takerTotalUsed(takerTotalUsed)
@@ -80,43 +88,46 @@ public class TradeProcessor {
                 );
             }
         } catch (FilledQuantityExceedException e) {
-            log.error("[TradeProcessor] Filled quantity exceeded. matchOrderId={}, placeOrderId={}",
+            log.error("[TradeProcessor.processMatchLimitOrder] Filled quantity exceeded. matchOrderId={}, placeOrderId={}",
                     matchOrder.getId(), placeOrder.getId(), e);
         } catch (Exception e) {
-            log.error("[TradeProcessor] Unexpected error during order match. matchOrderId={}, placeOrderId={}",
+            log.error("[TradeProcessor.processMatchLimitOrder] Unexpected error during order match. matchOrderId={}, placeOrderId={}",
                     matchOrder.getId(), placeOrder.getId(), e);
         }
     }
 
-    public void settleAndMarkOrders(TradeOrder matchOrder, TradeOrder placeOrder, BigDecimal matchedQty, BigDecimal takerTotalUsed,
+    public void settleAndMarkOrders(Long orderId, Long tradeId, Long takerId, Long makerId, TradeOrder placeOrder, BigDecimal matchedQty, BigDecimal takerTotalUsed,
                                     BigDecimal makerTotalUsed, TradeOrderSide orderSide) {
-        matchOrder.fill(matchedQty);
         placeOrder.fill(matchedQty);
 
         if (orderSide.equals(BUY)) {
             settlementEventSender.send(
                     BUY_ORDER_SETTLEMENT,
-                    matchOrder.getId(),
+                    placeOrder.getId(),
                     EventPayload.builder()
-                            .takerId(matchOrder.getUserId())
-                            .makerId(placeOrder.getUserId())
+                            .orderId(orderId)
+                            .tradeId(tradeId)
+                            .takerId(takerId)
+                            .makerId(makerId)
                             .takerTotalUsed(takerTotalUsed)
                             .makerTotalUsed(makerTotalUsed)
                             .matchedQuantity(matchedQty)
-                            .symbol(matchOrder.getSymbol())
+                            .symbol(placeOrder.getSymbol())
                             .build()
             );
         } else {
             settlementEventSender.send(
                     SELL_ORDER_SETTLEMENT,
-                    matchOrder.getId(),
+                    placeOrder.getId(),
                     EventPayload.builder()
-                            .takerId(matchOrder.getUserId())
-                            .makerId(placeOrder.getUserId())
+                            .orderId(orderId)
+                            .tradeId(tradeId)
+                            .takerId(takerId)
+                            .makerId(makerId)
                             .takerTotalUsed(takerTotalUsed)
                             .makerTotalUsed(makerTotalUsed)
                             .matchedQuantity(matchedQty)
-                            .symbol(matchOrder.getSymbol())
+                            .symbol(placeOrder.getSymbol())
                             .build()
             );
         }
@@ -124,14 +135,13 @@ public class TradeProcessor {
         if (placeOrder.isFullyFilled()) placeOrder.markCompleted();
     }
 
-    public void refundUnmatchedLockedBalance(TradeOrder order, BigDecimal remainPrice) {
+    public void refundUnmatchedLockedBalance(Long userId, BigDecimal remainPrice) {
         if (remainPrice.compareTo(BigDecimal.ZERO) > 0) {
             settlementEventSender.send(
                     REFUND_LOCKED_BALANCE,
-                    order.getUserId(),
+                    userId,
                     EventPayload.builder()
-                            .orderId(order.getId())
-                            .userId(order.getUserId())
+                            .userId(userId)
                             .totalRemainPrice(remainPrice)
                             .build()
             );
@@ -146,12 +156,24 @@ public class TradeProcessor {
         return amount.multiply(feeRate).setScale(8, RoundingMode.DOWN);
     }
 
-    public Trade createAndSaveTrade(TradeOrder matchOrder, TradeOrder placeOrder, BigDecimal price, BigDecimal qty,
+    public Trade createAndSaveTradeLimitOrder(TradeOrder matchOrder, TradeOrder placeOrder, BigDecimal price, BigDecimal qty,
                                     TradeOrderSide takerSide, BigDecimal takerFee, BigDecimal makerFee, LocalDateTime registeredDateTime) {
+
         return tradeRepository.save(Trade.create(
                 matchOrder.getSymbol(), price, qty, takerSide.name(),
                 matchOrder.getId(), placeOrder.getId(),
                 matchOrder.getUserId(), placeOrder.getUserId(),
+                takerFee, makerFee, registeredDateTime
+        ));
+    }
+
+    public Trade createAndSaveTradeMarketOrder(TradeOrder placeOrder, BigDecimal price, BigDecimal qty,
+                                    TradeOrderSide takerSide, BigDecimal takerFee, BigDecimal makerFee, LocalDateTime registeredDateTime) {
+
+        return tradeRepository.save(Trade.create(
+                placeOrder.getSymbol(), price, qty, takerSide.name(),
+                placeOrder.getId(), placeOrder.getId(),
+                placeOrder.getUserId(), placeOrder.getUserId(),
                 takerFee, makerFee, registeredDateTime
         ));
     }

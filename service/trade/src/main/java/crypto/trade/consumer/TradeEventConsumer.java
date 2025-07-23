@@ -2,6 +2,7 @@ package crypto.trade.consumer;
 
 import crypto.dataserializer.DataSerializer;
 import crypto.event.Event;
+import crypto.event.eventsender.OrderEventSender;
 import crypto.event.payload.EventPayload;
 import crypto.trade.service.TradeEventService;
 
@@ -24,6 +25,7 @@ import static crypto.event.EventType.*;
 public class TradeEventConsumer {
 
     private final DataSerializer dataSerializer;
+    private final OrderEventSender orderEventSender;
     private final TradeEventService tradeEventService;
     private final KafkaTemplate<String, String> kafkaTemplate;
 
@@ -44,7 +46,42 @@ public class TradeEventConsumer {
             ack.acknowledge();
         } catch (Exception e) {
             log.error("[TradeEventConsumer.listen] Error processing trade event: event={}, message={}, error={}", event, message, e.getMessage(), e);
+
+            try {
+                Long orderId = event.getPayload().getOrderId();
+                EventPayload failurePayload = EventPayload.builder()
+                        .orderId(orderId)
+                        .failMessage("Trade execution failed: " + e.getMessage())
+                        .build();
+                orderEventSender.sendFailCompleteEvent(ORDER_CANCEL_EVENT, orderId, failurePayload);
+                log.info("[TradeEventConsumer.listen] Sent trade execution failure event for orderId: {}", orderId);
+
+            } catch (Exception sendEx) {
+                log.error("[TradeEventConsumer.listen] CRITICAL: Failed to send failure event to order application. error={}", sendEx.getMessage(), sendEx);
+            }
             sendToDeadLetterQueue(message, "ERROR_PROCESSING_TRADE_EVENT");
+            ack.acknowledge();
+        }
+    }
+
+    @KafkaListener(topics = Topic.CRYPTO_ORDER_CANCEL, groupId = "crypto-order-cancel", id = "orderFailListener")
+    public void listenFailEvent(String message, Acknowledgment ack) {
+        log.info("[TradeEventConsumer.listenFailEvent] received message={}", message);
+        Event event = dataSerializer.deserialize(message, Event.class);
+
+        if (event == null) {
+            log.error("[TradeEventConsumer.listenFailEvent] Failed to parse event from message: message={}", message);
+            sendToDeadLetterQueue(message, "EVENT_IS_NULL_AFTER_PARSING");
+            ack.acknowledge();
+            return;
+        }
+
+        try {
+            tradeEventService.handleFailEvent(event);
+            ack.acknowledge();
+        } catch (Exception e) {
+            log.error("[TradeEventConsumer.listenFailEvent] Error processing order event: event={}, message={}, error={}", event, message, e.getMessage(), e);
+            sendToDeadLetterQueue(message, "ERROR_PROCESSING_ORDER_EVENT");
             ack.acknowledge();
         }
     }

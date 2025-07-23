@@ -17,7 +17,7 @@ public interface TradeOrderRepository extends JpaRepository<TradeOrder, Long> {
         SELECT o FROM TradeOrder o
         WHERE o.symbol = :symbol
           AND o.orderSide = :orderSide
-          AND o.orderStatus = 'OPEN'
+          AND o.orderStatus = :#{T(crypto.trade.entity.TradeOrderStatus).OPEN}
           AND o.price <= :buyPrice
         ORDER BY o.price ASC, o.registeredDateTime ASC
     """)
@@ -27,26 +27,26 @@ public interface TradeOrderRepository extends JpaRepository<TradeOrder, Long> {
         SELECT o FROM TradeOrder o
         WHERE o.symbol = :symbol
           AND o.orderSide = :orderSide
-          AND o.orderStatus = 'OPEN'
+          AND o.orderStatus = :#{T(crypto.trade.entity.TradeOrderStatus).OPEN}
           AND o.price >= :sellPrice
         ORDER BY o.price DESC, o.registeredDateTime ASC
     """)
     List<TradeOrder> findMatchedLimitSellOrders(@Param("symbol") String symbol, @Param("orderSide") TradeOrderSide orderSide, @Param("sellPrice") BigDecimal sellPrice);
 
     @Query("""
-        SELECT o FROM Order o
+        SELECT o FROM TradeOrder o
         WHERE o.symbol = :symbol
           AND o.orderSide = :orderSide
-          AND o.orderStatus = 'OPEN'
+          AND o.orderStatus = :#{T(crypto.trade.entity.TradeOrderStatus).OPEN}
         ORDER BY o.price ASC, o.registeredDateTime ASC
     """)
     List<TradeOrder> findMatchedMarketBuyOrders(@Param("symbol") String symbol, @Param("orderSide") TradeOrderSide orderSide);
 
     @Query("""
-        SELECT o FROM Order o
+        SELECT o FROM TradeOrder o
         WHERE o.symbol = :symbol
           AND o.orderSide = :orderSide
-          AND o.orderStatus = 'OPEN'
+          AND o.orderStatus = :#{T(crypto.trade.entity.TradeOrderStatus).OPEN}
         ORDER BY o.price DESC, o.registeredDateTime ASC
     """)
     List<TradeOrder> findMatchedMarketSellOrders(@Param("symbol") String symbol, @Param("orderSide") TradeOrderSide orderSide);
