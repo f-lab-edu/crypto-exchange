@@ -110,8 +110,9 @@ DLQ(Dead-Letter Queue)와 보상 트랜잭션을 이용해 데이터 정합성�
 
 <a id="issue_case"></a>
 ## ⚠️ 기술적 issue 해결 과정
-### [[#5] 비즈니스 데이터와 카프카 이벤트 간 트랜잭션 문제](docs/transaction.md)
-### [[#4] 보상 트랜잭션 구현과 Saga 패턴의 적용](docs/saga-pattern.md)
+### [[#6] 비즈니스 데이터와 카프카 이벤트 간 트랜잭션 문제](docs/transaction.md)
+### [[#5] 보상 트랜잭션 구현과 Saga 패턴의 적용](docs/saga-pattern.md)
+### [[#4] 주문, 체결, 정산 과정에서 발생하는 동시성 문제 해결](docs/lock.md)
 ### [[#3] DLQ (Dead Letter Queue) 토픽으로 처리 실패 메세지 전송하기](docs/dlq.md)
 ### [[#2] 이벤트 드리븐 아키텍처 채택 이유와 Kafka vs RabbitMQ](docs/event-driven.md)
 ### [[#1] 주문 API 서버와 고객 자산 API 서버를 분리한 이유](docs/api-application.md)
