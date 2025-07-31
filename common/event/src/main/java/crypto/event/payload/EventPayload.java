@@ -24,6 +24,10 @@ public class EventPayload {
 
     private Long takerId;
     private Long makerId;
+    private Long takerOrderId;
+    private Long makerOrderId;
+    private Long tradeId;
+
     private BigDecimal takerTotalUsed;
     private BigDecimal makerTotalUsed;
     private BigDecimal matchedQuantity;

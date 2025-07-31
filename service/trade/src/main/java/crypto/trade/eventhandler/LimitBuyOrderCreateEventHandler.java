@@ -3,9 +3,7 @@ package crypto.trade.eventhandler;
 import crypto.common.time.TimeProvider;
 import crypto.event.Event;
 import crypto.event.EventType;
-import crypto.event.payload.EventPayload;
 import crypto.trade.entity.TradeOrder;
-import crypto.trade.eventhandler.exception.TradeOrderNotFoundException;
 import crypto.trade.repository.TradeOrderRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -26,21 +24,18 @@ public class LimitBuyOrderCreateEventHandler implements EventHandler {
     private final TimeProvider timeProvider;
 
     @Override
-    public void handle(Event event) {
+    public void handle(Event event, TradeOrder buyOrder) {
         LocalDateTime registeredDateTime = timeProvider.now();
-        EventPayload payload = event.getPayload();
+        Long orderId = event.getPayload().getOrderId();
 
-        TradeOrder buyOrder = tradeOrderRepository.findById(payload.getOrderId())
-                .orElseThrow(TradeOrderNotFoundException::new);
-
-        List<TradeOrder> sellOrders = tradeOrderRepository.findMatchedLimitBuyOrders(buyOrder.getSymbol(), buyOrder.getOrderSide(), buyOrder.getPrice());
+        List<TradeOrder> sellOrders = tradeOrderRepository.findMatchedLimitBuyOrders(buyOrder.getSymbol(), SELL, buyOrder.getPrice());
 
         if (sellOrders.isEmpty()) {
             return;
         }
 
         for (TradeOrder sellOrder : sellOrders) {
-            tradeProcessor.processMatchLimitOrder(buyOrder, sellOrder, BUY, registeredDateTime);
+            tradeProcessor.processMatchLimitOrder(orderId, buyOrder, sellOrder, BUY, registeredDateTime);
 
             if (sellOrder.isFullyFilled()) {
                 sellOrder.markCompleted();

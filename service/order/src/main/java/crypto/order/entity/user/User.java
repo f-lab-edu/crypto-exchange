@@ -1,7 +1,8 @@
 package crypto.order.entity.user;
 
-import crypto.common.entity.BaseEntity;
+import crypto.baseentity.BaseEntity;
 import crypto.order.entity.order.Order;
+
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;

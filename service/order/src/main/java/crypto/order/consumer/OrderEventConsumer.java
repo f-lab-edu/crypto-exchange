@@ -50,6 +50,50 @@ public class OrderEventConsumer {
         }
     }
 
+    @KafkaListener(topics = Topic.CRYPTO_ORDER_CANCEL, groupId = "crypto-order-cancel", id = "orderFailListener")
+    public void listenFailEvent(String message, Acknowledgment ack) {
+        log.info("[OrderEventConsumer.listenFailEvent] received message={}", message);
+        Event event = dataSerializer.deserialize(message, Event.class);
+
+        if (event == null) {
+            log.error("[OrderEventConsumer.listenFailEvent] Failed to parse event from message: message={}", message);
+            sendToDeadLetterQueue(message, "EVENT_IS_NULL_AFTER_PARSING");
+            ack.acknowledge();
+            return;
+        }
+
+        try {
+            orderEventService.handleFailEvent(event);
+            ack.acknowledge();
+        } catch (Exception e) {
+            log.error("[OrderEventConsumer.listenFailEvent] Error processing order event: event={}, message={}, error={}", event, message, e.getMessage(), e);
+            sendToDeadLetterQueue(message, "ERROR_PROCESSING_ORDER_EVENT");
+            ack.acknowledge();
+        }
+    }
+
+    @KafkaListener(topics = Topic.CRYPTO_ORDER_COMPLETE, groupId = "crypto-order-complete", id = "orderCompleteListener")
+    public void listenCompleteEvent(String message, Acknowledgment ack) {
+        log.info("[OrderEventConsumer.listenCompleteEvent] received message={}", message);
+        Event event = dataSerializer.deserialize(message, Event.class);
+
+        if (event == null) {
+            log.error("[OrderEventConsumer.listenCompleteEvent] Failed to parse event from message: message={}", message);
+            sendToDeadLetterQueue(message, "EVENT_IS_NULL_AFTER_PARSING");
+            ack.acknowledge();
+            return;
+        }
+
+        try {
+            orderEventService.handleCompleteEvent(event);
+            ack.acknowledge();
+        } catch (Exception e) {
+            log.error("[OrderEventConsumer.listenCompleteEvent] Error processing order event: event={}, message={}, error={}", event, message, e.getMessage(), e);
+            sendToDeadLetterQueue(message, "ERROR_PROCESSING_ORDER_EVENT");
+            ack.acknowledge();
+        }
+    }
+
     public void sendToDeadLetterQueue(String originalMessage, String failMessage) {
         String dlqTopic = Topic.CRYPTO_ORDER_DLQ;
 

@@ -1,14 +1,15 @@
 package crypto.common.api.response;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 
 import static crypto.common.api.response.CommonResponseCode.SUCCESS;
 
 
 @Getter
+@NoArgsConstructor
 public class ApiResponse<T> {
 
     private int code;
@@ -29,10 +30,6 @@ public class ApiResponse<T> {
 
     public static <T> ApiResponse<T> success(T data) {
         return of(HttpStatus.OK, SUCCESS.getMessage(), data);
-    }
-
-    public static <T> ApiResponse<PageResponse<T>> successPage(Page<T> page) {
-        return success(PageResponse.from(page));
     }
 }
 

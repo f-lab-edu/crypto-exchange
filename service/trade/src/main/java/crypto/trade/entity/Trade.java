@@ -36,6 +36,7 @@ public class Trade {
     private BigDecimal makerFee;
 
     private LocalDateTime tradedAt;
+    private LocalDateTime deletedAt;
 
     @Builder
     public Trade(String symbol, BigDecimal price, BigDecimal quantity, String orderSide, Long takerOrderId, Long makerOrderId,
@@ -68,5 +69,9 @@ public class Trade {
                 .makerFee(makerFee)
                 .tradedAt(tradedAt)
                 .build();
+    }
+
+    public void markDeleted(LocalDateTime deletedDateTime) {
+        this.deletedAt = deletedDateTime;
     }
 }

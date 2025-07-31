@@ -1,8 +1,8 @@
 package crypto.order.entity.order;
 
-import crypto.common.entity.BaseEntity;
+import crypto.baseentity.BaseEntity;
 import crypto.order.entity.coin.Coin;
-import crypto.order.entity.order.exception.FilledQuantityExceedException;
+import crypto.order.entity.order.exception.OrderCycleStatus;
 import crypto.order.entity.user.User;
 
 import jakarta.persistence.*;
@@ -18,6 +18,7 @@ import static crypto.order.entity.order.OrderSide.*;
 import static crypto.order.entity.order.OrderStatus.*;
 import static crypto.order.entity.order.OrderType.*;
 
+import static crypto.order.entity.order.exception.OrderCycleStatus.*;
 import static java.math.BigDecimal.ZERO;
 
 
@@ -33,7 +34,6 @@ public class Order extends BaseEntity {
 
     private BigDecimal price = ZERO;
     private BigDecimal quantity = ZERO;
-    private BigDecimal filledQuantity = ZERO;
     private BigDecimal marKetTotalPrice = ZERO;
     private BigDecimal marketTotalQuantity = ZERO;
 
@@ -45,6 +45,9 @@ public class Order extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus = OPEN;
+
+    @Enumerated(EnumType.STRING)
+    private OrderCycleStatus orderCycleStatus = ORDER_PENDING;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "coin_id")
@@ -106,15 +109,7 @@ public class Order extends BaseEntity {
                 .build();
     }
 
-    public void markDeleted(LocalDateTime deletedDateTime) {
-        this.deletedDateTime = deletedDateTime;
-    }
-
-    public BigDecimal calculateRemainQuantity() {
-        if (getFilledQuantity().compareTo(getQuantity()) > 0) {
-            throw new FilledQuantityExceedException();
-        }
-
-        return (getQuantity().subtract(getFilledQuantity()));
+    public void handleOrderStatus(OrderCycleStatus orderCycleStatus) {
+        this.orderCycleStatus = orderCycleStatus;
     }
 }
