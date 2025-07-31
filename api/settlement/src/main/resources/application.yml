@@ -13,3 +13,7 @@ spring:
     show-sql: true
     hibernate:
       ddl-auto: none
+
+endpoints:
+  crypto-exchange-settlement:
+    url: http://127.0.0.1:9001

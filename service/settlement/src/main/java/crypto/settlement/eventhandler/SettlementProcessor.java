@@ -1,9 +1,8 @@
 package crypto.settlement.eventhandler;
 
-import crypto.settlementdata.entity.UserCoin;
-import crypto.settlementdata.service.UserBalanceService;
+import crypto.settlement.service.UserBalanceService;
+import crypto.settlement.service.UserCoinService;
 
-import crypto.settlementdata.service.UserCoinService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Component;

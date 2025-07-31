@@ -3,7 +3,7 @@ package crypto.settlement.eventhandler;
 import crypto.event.Event;
 import crypto.event.EventType;
 import crypto.event.payload.EventPayload;
-import crypto.settlementdata.service.UserBalanceService;
+import crypto.settlement.service.UserBalanceService;
 
 import lombok.RequiredArgsConstructor;
 
