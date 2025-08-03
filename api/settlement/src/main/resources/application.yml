@@ -2,7 +2,7 @@ server.port: 9004
 spring:
   application:
     name: crypto-exchange-settlement-api
-
+    
 endpoints:
   crypto-exchange-settlement:
     url: http://127.0.0.1:9001

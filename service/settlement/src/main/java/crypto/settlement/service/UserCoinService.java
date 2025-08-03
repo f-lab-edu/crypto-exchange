@@ -19,7 +19,6 @@ public class UserCoinService {
 
     private final UserCoinRepository userCoinRepository;
 
-
     public UserCoin getUserCoinOrThrow(Long userId, String symbol) {
         return userCoinRepository.findByUserIdAndSymbol(userId, symbol)
                 .orElseThrow(UserCoinNotFoundException::new);

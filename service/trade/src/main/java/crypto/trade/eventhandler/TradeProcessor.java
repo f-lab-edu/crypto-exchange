@@ -61,7 +61,7 @@ public class TradeProcessor {
             if (takerUpdatedRows == 0) {
                 throw new OrderFillException();
             }
-
+          
             Trade trade = createAndSaveTradeLimitOrder(matchOrder, placeOrder, matchedPrice, matchedQty, orderSide, takerFee, makerFee, registeredDateTime);
 
             if (orderSide.equals(BUY)) {
