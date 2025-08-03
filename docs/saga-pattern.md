@@ -19,7 +19,7 @@ Saga 패턴을 구현할 수 있습니다. <br>
 <br></br>
 
 ### 📌 Orchestration 패턴:
-![img_1.png](img_1.png)
+![오케스트레이션](images/orchestration.png)
 <br>
 
 오케스트레이션 패턴은 중앙 컨트롤러, 즉 '오케스트레이터(Orchestrator)'가 전체 분산 트랜잭션의 흐름을 지휘하고 관리하는 방식입니다.
@@ -39,7 +39,7 @@ Saga 패턴을 구현할 수 있습니다. <br>
 <br></br>
 
 ### 📌 Choreography 패턴:
-![img_3.png](img_3.png)
+![코레오그래피](images/choreography.png)
 <br>
 
 코레오그래피(Choreography) 패턴은 중앙 관제탑 없이, 각 서비스가 이벤트를 통해 자율적으로 소통하며 분산된 트랜잭션을 처리하는 패턴입니다.

@@ -8,7 +8,7 @@
 
 ### 📌 현재 API 서버 구조도:
 
-![img_2.png](img_2.png)
+![API 구조도](images/api_architecture.png)
 <br></br>
 
 ### 📌 API 서버 분리 이유:

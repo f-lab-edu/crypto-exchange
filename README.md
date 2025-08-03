@@ -9,7 +9,7 @@
 --- 
 
 ## 📝 프로젝트 구조도
-![img_4.png](img_4.png)
+![프로젝트 구조도](docs/images/project_architecture.png)
 
 <a id="success_case"></a>
 ### ✨ 이벤트 기반 데이터 처리 흐름
@@ -62,7 +62,7 @@
 ---
 
 ## 📝 카프카 이벤트 흐름도
-![img_2.png](img_2.png)
+![카프카 흐름도](docs/images/kafka_architecture.png)
 <br>
 
 위 그림은 프로젝트의 이벤트 기반 통신 방식을 나타냅니다. 이전에 설명한 [정상적인 데이터 처리 흐름(성공 케이스)](#success_case)
@@ -93,7 +93,7 @@ DLQ(Dead-Letter Queue)와 보상 트랜잭션을 이용해 데이터 정합성�
 ---
 
 ## 📝 카프카 브로커 구조도
-![img_3.png](img_3.png)
+![카프카 브로커](docs/images/kafka_broker.png)
 <br>
 
 현 프로젝트는 카프카를 이벤트 브로커로 활용하며, '1 이벤트 = 1 토픽' 원칙에 따라 시스템을 설계했습니다. <br>
