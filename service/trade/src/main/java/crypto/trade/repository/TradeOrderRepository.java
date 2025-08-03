@@ -4,6 +4,7 @@ import crypto.trade.entity.TradeOrder;
 import crypto.trade.entity.TradeOrderSide;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -50,5 +51,11 @@ public interface TradeOrderRepository extends JpaRepository<TradeOrder, Long> {
         ORDER BY o.price DESC, o.registeredDateTime ASC
     """)
     List<TradeOrder> findMatchedMarketSellOrders(@Param("symbol") String symbol, @Param("orderSide") TradeOrderSide orderSide);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE TradeOrder o " +
+            "SET o.filledQuantity = o.filledQuantity + :quantityToFill " +
+            "WHERE o.id = :orderId AND (o.quantity - o.filledQuantity) >= :quantityToFill")
+    int fillAtomically(@Param("orderId") Long orderId, @Param("quantityToFill") BigDecimal quantityToFill);
 
 }

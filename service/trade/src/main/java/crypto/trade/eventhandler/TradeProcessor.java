@@ -8,6 +8,8 @@ import crypto.trade.entity.TradeOrder;
 import crypto.trade.entity.TradeOrderRole;
 import crypto.trade.entity.TradeOrderSide;
 import crypto.trade.entity.exception.FilledQuantityExceedException;
+import crypto.trade.eventhandler.exception.OrderFillException;
+import crypto.trade.repository.TradeOrderRepository;
 import crypto.trade.repository.TradeRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -30,6 +32,7 @@ import static crypto.trade.entity.TradeOrderSide.*;
 public class TradeProcessor {
     private final SettlementEventSender settlementEventSender;
     private final TradeRepository tradeRepository;
+    private final TradeOrderRepository tradeOrderRepository;
     private final FeePolicy feePolicy;
 
     public void processMatchLimitOrder(Long orderId, TradeOrder matchOrder, TradeOrder placeOrder, TradeOrderSide orderSide, LocalDateTime registeredDateTime) {
@@ -47,8 +50,17 @@ public class TradeProcessor {
             BigDecimal takerTotalUsed = totalPrice.add(takerFee);
             BigDecimal makerTotalUsed = totalPrice.add(makerFee);
 
-            matchOrder.fill(matchedQty);
-            placeOrder.fill(matchedQty);
+            int makerUpdatedRows = tradeOrderRepository.fillAtomically(matchOrder.getId(), matchedQty);
+
+            if (makerUpdatedRows == 0) {
+                throw new OrderFillException();
+            }
+
+            int takerUpdatedRows = tradeOrderRepository.fillAtomically(placeOrder.getId(), matchedQty);
+
+            if (takerUpdatedRows == 0) {
+                throw new OrderFillException();
+            }
 
             Trade trade = createAndSaveTradeLimitOrder(matchOrder, placeOrder, matchedPrice, matchedQty, orderSide, takerFee, makerFee, registeredDateTime);
 

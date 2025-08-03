@@ -4,14 +4,12 @@ import crypto.event.Event;
 import crypto.event.EventType;
 import crypto.event.eventsender.OrderEventSender;
 import crypto.event.payload.EventPayload;
-import crypto.settlementdata.entity.UserCoin;
-import crypto.settlementdata.service.UserCoinService;
+import crypto.settlement.service.UserCoinService;
 
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Component;
 
-import static crypto.event.EventType.BUY_ORDER_SETTLEMENT;
 import static crypto.event.EventType.ORDER_COMPLETE_EVENT;
 
 

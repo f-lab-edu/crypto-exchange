@@ -20,17 +20,17 @@ public class SettlementProcessor {
     public void settleUser(BigDecimal takerTotalPrice, BigDecimal makerTotalPrice, BigDecimal matchedQuantity,
                            Long takerId, Long makerId, String symbol, String orderSide) {
         if (orderSide.equals("BUY")) {
-            userBalanceService.getUserBalanceOrThrow(takerId).decreaseLockedBalance(takerTotalPrice);
-            userBalanceService.getUserBalanceOrThrow(makerId).increaseAvailableBalance(makerTotalPrice);
+            userBalanceService.decreaseLockBalance(takerId, takerTotalPrice);
+            userBalanceService.increaseAvailableBalance(makerId, makerTotalPrice);
 
-            userCoinService.getUserCoinOrCreate(takerId, symbol).increaseQuantity(matchedQuantity);
-            userCoinService.getUserCoinOrThrow(makerId, symbol).decreaseLockQuantity(matchedQuantity);
+            userCoinService.increaseAvailableQuantity(takerId, symbol, matchedQuantity);
+            userCoinService.decreaseLockQuantity(makerId, symbol, matchedQuantity);
         } else {
-            userBalanceService.getUserBalanceOrThrow(makerId).increaseAvailableBalance(makerTotalPrice);
-            userBalanceService.getUserBalanceOrThrow(takerId).decreaseLockedBalance(takerTotalPrice);
+            userBalanceService.increaseAvailableBalance(makerId, makerTotalPrice);
+            userBalanceService.decreaseLockBalance(takerId, takerTotalPrice);
 
-            userCoinService.getUserCoinOrThrow(makerId, symbol).decreaseLockQuantity(matchedQuantity);
-            userCoinService.getUserCoinOrCreate(takerId, symbol).increaseQuantity(matchedQuantity);
+            userCoinService.decreaseLockQuantity(makerId, symbol, matchedQuantity);
+            userCoinService.increaseAvailableQuantity(takerId, symbol, matchedQuantity);
         }
     }
 }
