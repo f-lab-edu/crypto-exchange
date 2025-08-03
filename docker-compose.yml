@@ -1,0 +1,164 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0.38
+    container_name: crypto-exchange-mysql
+    environment:
+      MYSQL_DATABASE: crypto_main_db
+      MYSQL_USER: crypto_user
+      MYSQL_PASSWORD: user1234
+      MYSQL_ROOT_PASSWORD: user1234
+    ports:
+      - "3306:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "crypto_user", "--password=user1234" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - crypto-network
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2GB
+
+  redis:
+    image: redis:7.0
+    container_name: crypto-exchange-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - crypto-network
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 512M
+
+  kafka:
+    image: apache/kafka:3.8.0
+    container_name: crypto-exchange-kafka
+    ports:
+      - "9092:9092"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    environment:
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_NODE_ID: 1
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:9093'
+      KAFKA_LISTENERS: 'PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:9092'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_LOG_DIRS: '/var/lib/kafka/data'
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+    healthcheck:
+      test: [ "CMD-SHELL", "bash -c 'echo \"\" | nc -w 1 localhost 9092'" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - crypto-network
+
+  order-api-server:
+    build: ./api/order/
+    container_name: crypto-exchange-order-api
+    depends_on:
+      - kafka
+    ports:
+      - "9003:9003"
+    environment:
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    networks:
+      - crypto-network
+
+  asset-api-server:
+    build: ./api/settlement/
+    container_name: crypto-exchange-settlement-api
+    ports:
+      - "9004:9004"
+    networks:
+      - crypto-network
+
+  order-app:
+    build: ./service/order/
+    container_name: crypto-exchange-order
+    depends_on:
+      db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    ports:
+      - "9000:9000"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/crypto_main_db?useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=crypto_user
+      - SPRING_DATASOURCE_PASSWORD=user1234
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    networks:
+      - crypto-network
+
+  trade-app:
+    build: ./service/trade/
+    container_name: crypto-exchange-trade
+    depends_on:
+      db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    ports:
+      - "9002:9002"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/crypto_main_db?useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=crypto_user
+      - SPRING_DATASOURCE_PASSWORD=user1234
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    networks:
+      - crypto-network
+
+  settlement-app:
+    build: ./service/settlement/
+    container_name: crypto-exchange-settlement
+    depends_on:
+      db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    ports:
+      - "9001:9001"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/crypto_main_db?useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=crypto_user
+      - SPRING_DATASOURCE_PASSWORD=user1234
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    networks:
+      - crypto-network
+
+volumes:
+  db-data:
+  redis-data:
+  kafka-data:
+
+networks:
+  crypto-network:
+    driver: bridge
