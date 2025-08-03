@@ -7,3 +7,11 @@ dependencies {
     implementation project(':common:common')
     implementation project(':common:data-serializer')
 }
+
+bootJar {
+    enabled = false
+}
+
+jar {
+    enabled = true
+}

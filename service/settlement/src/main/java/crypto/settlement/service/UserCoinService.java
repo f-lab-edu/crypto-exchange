@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+
 
 @Transactional
 @RequiredArgsConstructor
@@ -25,5 +27,21 @@ public class UserCoinService {
     public UserCoin getUserCoinOrCreate(Long userId, String symbol) {
         return userCoinRepository.findByUserIdAndSymbol(userId, symbol)
                 .orElseGet(() -> userCoinRepository.save(UserCoin.create(userId, symbol)));
+    }
+
+    public void decreaseLockQuantity(Long userId, String symbol, BigDecimal quantity) {
+        int updatedRows = userCoinRepository.decreaseLockQuantity(userId, symbol, quantity);
+
+        if (updatedRows == 0) {
+            throw new UserCoinNotFoundException();
+        }
+    }
+
+    public void increaseAvailableQuantity(Long userId, String symbol, BigDecimal quantity) {
+        int updatedRows = userCoinRepository.increaseAvailableQuantity(userId, symbol, quantity);
+
+        if (updatedRows == 0) {
+            throw new UserCoinNotFoundException();
+        }
     }
 }

@@ -4,8 +4,6 @@ import crypto.event.Event;
 import crypto.event.EventType;
 import crypto.event.eventsender.OrderEventSender;
 import crypto.event.payload.EventPayload;
-import crypto.settlementdata.entity.UserCoin;
-import crypto.settlementdata.service.UserCoinService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -19,7 +17,6 @@ import static crypto.event.EventType.ORDER_COMPLETE_EVENT;
 public class SellOrderSettlementEventHandler implements EventHandler {
 
     private final SettlementProcessor settlementProcessor;
-    private final UserCoinService userCoinService;
     private final OrderEventSender orderEventSender;
 
     @Override

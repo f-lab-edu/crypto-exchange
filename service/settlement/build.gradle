@@ -7,5 +7,4 @@ dependencies {
     implementation project(':common:common')
     implementation project(':common:data-serializer')
     implementation project(':common:event')
-    implementation project(':common:settlement-data')
 }
