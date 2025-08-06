@@ -3,15 +3,17 @@ package crypto.event.eventsender;
 import crypto.dataserializer.DataSerializer;
 import crypto.event.Event;
 import crypto.event.EventType;
+import crypto.event.TradeEvent;
 import crypto.event.payload.EventPayload;
 
 import lombok.RequiredArgsConstructor;
-
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -27,8 +29,13 @@ public class TradeEventSender {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final DataSerializer dataSerializer;
 
+    @TransactionalEventListener
     @Async("publishEventExecutor")
-    public void send(EventType type, Long key, EventPayload payload) {
+    public void send(TradeEvent tradeEvent) {
+        EventType type = tradeEvent.getType();
+        Long key = tradeEvent.getKey();
+        EventPayload payload = tradeEvent.getPayload();
+
         String message = dataSerializer.serialize(Event.of(
                 UUID.randomUUID().toString(),
                 type,

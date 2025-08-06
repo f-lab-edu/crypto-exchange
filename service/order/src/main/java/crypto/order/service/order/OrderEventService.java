@@ -2,6 +2,7 @@ package crypto.order.service.order;
 
 import crypto.common.time.TimeProvider;
 import crypto.event.Event;
+import crypto.event.TradeEvent;
 import crypto.event.eventsender.TradeEventSender;
 import crypto.event.payload.EventPayload;
 import crypto.order.entity.coin.Coin;
@@ -19,6 +20,7 @@ import crypto.order.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,7 +40,7 @@ public class OrderEventService {
     private final OrderProcessedEventRepository orderProcessedEventRepository;
     private final OrderProcessedEventDbRepository orderProcessedEventDbRepository;
     private final OrderRepository orderRepository;
-    private final TradeEventSender tradeEventSender;
+    private final ApplicationEventPublisher eventPublisher;
     private final CoinService coinService;
     private final UserService userService;
 
@@ -63,7 +65,11 @@ public class OrderEventService {
                 orderRepository.save(order);
 
                 EventPayload tradePayload = createTradePayload(order, payload);
-                tradeEventSender.send(event.getType().toMatchingEventType(), order.getId(), tradePayload);
+                eventPublisher.publishEvent(TradeEvent.of(
+                        event.getType().toMatchingEventType(),
+                        order.getId(),
+                        tradePayload
+                ));
 
                 orderProcessedEventDbRepository.save(new OrderProcessedEvent(eventId));
                 log.info("[OrderEventService.handleEvent] Order saved successfully: {}", order);
